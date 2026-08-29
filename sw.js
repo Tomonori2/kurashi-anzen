@@ -4,7 +4,7 @@
 //
 // 中身を変えて公開するときは、下の CACHE の数字（v1→v2…）を必ず1つ増やすこと。
 // 増やさないと、スマホが古い版を使い続けます。
-const CACHE = 'kurashi-anzen-v1';
+const CACHE = 'kurashi-anzen-v2';
 const SHARE_CACHE = 'kurashi-anzen-share';
 const SHARE_KEY = 'shared-audio-file';
 const SHELL = [
