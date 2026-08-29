@@ -4,12 +4,12 @@
 //
 // 中身を変えて公開するときは、下の CACHE の数字（v1→v2…）を必ず1つ増やすこと。
 // 増やさないと、スマホが古い版を使い続けます。
-const CACHE = 'kurashi-anzen-v2';
+const CACHE = 'kurashi-anzen-v3';
 const SHARE_CACHE = 'kurashi-anzen-share';
 const SHARE_KEY = 'shared-audio-file';
 const SHELL = [
   './', 'index.html', 'manifest.json',
-  'icon-192.png', 'icon-512.png',
+  'icon-192.png?v=2', 'icon-512.png?v=2',
   'knowledge.js', 'news_data.js', 'curated_news.js', 'curated_danger_numbers.js'
 ];
 
