@@ -22,7 +22,7 @@
     "enctype": "multipart/form-data",
     "params": {
       "files": [
-        { "name": "file", "accept": ["audio/*", "video/mp4", "video/webm"] }
+        { "name": "file", "accept": ["audio/*", "video/mp4", "video/webm", "image/*"] }
       ]
     }
   }

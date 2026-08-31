@@ -1,4 +1,5 @@
 // 警察庁SOS47ページから自動取得（fetch_scam_news.py）。手動で書き換えないこと。
+const SCAM_NEWS_UPDATED = "2026/08/31";
 const SCAM_NEWS = [
   {
     "date": "2026年 6月5日(金)",

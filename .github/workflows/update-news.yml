@@ -1,0 +1,42 @@
+# 警察庁の詐欺注意喚起を毎朝取ってきて、news_data.js を自動で更新する。
+# GitHub上で勝手に動く仕組み（GitHub Actions）。無料。
+#
+# ・毎日 朝6時（日本時間）ごろに動く。GitHubの都合で数十分ずれることがある。
+# ・「Actions」タブの「Run workflow」から手動でも動かせる。
+# ・取得に失敗した日は news_data.js を書き換えず、赤い×で終わる（メールで気づける）。
+name: 警察庁の詐欺注意喚起を毎朝更新
+
+on:
+  schedule:
+    - cron: '0 21 * * *'   # UTC 21:00 = 日本時間 朝6:00
+  workflow_dispatch:        # 手動実行用のボタン
+
+permissions:
+  contents: write           # news_data.js を書き換えてコミットするために必要
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: リポジトリを取ってくる
+        uses: actions/checkout@v4
+
+      - name: Pythonを用意する
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 警察庁から取得して news_data.js を更新
+        run: python fetch_scam_news.py
+
+      - name: 中身が変わっていたらコミットして反映
+        run: |
+          if [ -z "$(git status --porcelain news_data.js)" ]; then
+            echo "変更なし（警察庁の新しい注意喚起はありませんでした）"
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add news_data.js
+          git commit -m "警察庁の詐欺注意喚起を自動更新"
+          git push
