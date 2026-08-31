@@ -35,10 +35,5 @@ const SCAM_NEWS = [
     "date": "2025年 4月28日(月)",
     "title": "ビデオ通話を悪用した“偽警察官・検察官”の詐欺に注意！！",
     "url": "https://www.npa.go.jp/bureau/safetylife/sos47/new-topics/241218/02.html"
-  },
-  {
-    "date": "2025年 4月8日(火)",
-    "title": "あなたの暗号資産が狙われています！",
-    "url": "https://www.npa.go.jp/bureau/safetylife/sos47/new-topics/250408/01.html"
   }
 ];
