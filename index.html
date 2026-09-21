@@ -263,6 +263,12 @@
       このアプリの答えは一般的な防犯情報です。個人情報は入力しないでください。
       <div class="hint" id="homeStatus" style="margin-top:10px;"></div>
     </div>
+
+    <div class="homenote" id="feedbackBox" style="display:none; margin-top:14px;">
+      <b>📝 ご意見をお聞かせください</b><br>
+      「こんな相談にも答えてほしい」「ここが分かりにくい」など、ひとことで大丈夫です。お名前やメールアドレスは不要です。
+      <a class="callbtn b3" id="feedbackLink" target="_blank" rel="noopener">ご意見を送る（1分）</a>
+    </div>
   </div></div>
 </div>
 
@@ -1141,7 +1147,15 @@ el('saveBtn').addEventListener('click', function () {
 });
 
 // スマホが古い版を掴んでいないか一目で分かるように、画面に版数を出しておく
-const APP_VERSION = 'v1.1（写真で相談）';
+const APP_VERSION = 'v1.2（ご意見ボタン）';
+
+// ご意見フォーム（Googleフォーム）の共有リンク。空のあいだはボタンを出さない。
+// ※公開してよいリンクなので、ここに直接書いてかまわない（秘密の情報ではない）。
+const FEEDBACK_URL = 'https://forms.gle/kBFZQcBrHmdjY4GV9';
+if (FEEDBACK_URL) {
+  el('feedbackLink').href = FEEDBACK_URL;
+  el('feedbackBox').style.display = 'block';
+}
 
 function updateHomeStatus() {
   const n = (typeof KNOWLEDGE !== 'undefined') ? KNOWLEDGE.length : 0;
