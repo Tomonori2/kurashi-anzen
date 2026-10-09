@@ -137,7 +137,7 @@
   .qbox { padding: 13px 0; border-bottom: 1px dashed #dde4ee; }
   .qbox:last-child { border-bottom: none; }
   .qtext { font-size: 15px; line-height: 1.7; margin-bottom: 9px; }
-  .ans { display: flex; gap: 6px; }
+  .ans { display: flex; gap: 6px; flex-wrap: wrap; }
   .ans button {
     flex: 1; min-width: 0; border: 1px solid #c8d4e4; background: #fff; color: #445;
     border-radius: 10px; padding: 10px 2px; font-size: 13px;
@@ -155,6 +155,27 @@
   .fixitem.unk { border-left-color: #f0a500; background: #fff9ec; }
   .fixitem b { display: block; margin-bottom: 4px; }
   .sumline { font-size: 17px; font-weight: bold; margin-bottom: 4px; }
+
+  /* ===== パスワード漏れ調べ ===== */
+  .pw-input {
+    width: 100%; font-size: 16px; padding: 12px; margin-top: 10px;
+    border: 1px solid #c8d4e4; border-radius: 10px; font-family: inherit;
+  }
+  .pw-show { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #445; margin: 8px 0 10px; }
+  .pw-result { border-radius: 10px; padding: 12px; margin-top: 12px; font-size: 14px; line-height: 1.75; }
+  .pw-result b { display: block; font-size: 16px; margin-bottom: 4px; }
+  .pw-result.bad  { background: #fdf5f4; border-left: 4px solid #d0342c; }
+  .pw-result.warn { background: #fff9ec; border-left: 4px solid #f0a500; }
+  .pw-result.none { background: #f1f8f2; border-left: 4px solid #2e7d32; }
+  .pw-result ul { margin: 6px 0 0 18px; }
+  .pw-how { font-size: 12px; color: #6a7a90; line-height: 1.8; margin-top: 12px; }
+  .pw-how summary { cursor: pointer; }
+  .gen-out {
+    font-family: Consolas, "Courier New", monospace; font-size: 19px; font-weight: bold;
+    background: #f1f5fa; border: 1px dashed #9db2cc; border-radius: 10px;
+    padding: 14px 10px; margin: 12px 0 10px; text-align: center;
+    word-break: break-all; user-select: all; letter-spacing: 1px;
+  }
 
   .homenote {
     background: #fff; border: 1px solid #dde4ee; border-radius: 12px;
@@ -344,7 +365,7 @@
     </button>
     <button class="bigbtn help" onclick="go('help')">
       <span class="t">🚑 だまされたかも・やってしまった</span>
-      <span class="d">カード番号を入れた、お金を振り込んだ、あやしいアプリを入れた…。いますぐやることを順番に出します。設定なしで使えます。</span>
+      <span class="d">カード番号を入れた、お金を振り込んだ、あやしいアプリを入れた、スマホをなくした…。いますぐやることを順番に出します。設定なしで使えます。</span>
     </button>
     <button class="bigbtn soudan" onclick="go('soudan')">
       <span class="t">💬 相談したい</span>
@@ -355,8 +376,8 @@
       <span class="d">電話が終わったあとに、録音を文字にして詐欺かどうかを判定します。</span>
     </button>
     <button class="bigbtn check" onclick="go('check')">
-      <span class="t">🔍 スマホとネットの弱点チェック</span>
-      <span class="d">11の質問に答えると、あなたの弱いところと直し方が分かります。約2分・設定なしで使えます。</span>
+      <span class="t">🛡️ サイバーセキュリティ対策（弱点チェック）</span>
+      <span class="d">パスワードの漏れと家のWi-Fiの古さを調べ、14の質問であなたの弱いところと直し方を出します。約3分・設定なしで使えます。<span id="check-due-home"></span></span>
     </button>
 
     <div class="homenote">
@@ -539,12 +560,91 @@
 <!-- ══════════ スマホとネットの弱点チェック ══════════ -->
 <div class="screen" id="screen-check">
   <div class="scroll"><div class="inner">
+    <div class="card">
+      <div class="label">🔑 パスワード漏れ調べ</div>
+      <div style="font-size:14px; line-height:1.75;">
+        いま使っているパスワードが、過去にどこかの会社から漏れたものの中に入っていないかを調べます。
+        漏れたパスワードは犯人のあいだで出回り、ほかのサービスでも順番に試されます。
+      </div>
+      <input type="password" class="pw-input" id="pw-input" placeholder="調べたいパスワード"
+             autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+      <label class="pw-show"><input type="checkbox" id="pw-show" onchange="togglePwShow()"> 入れた文字を見えるようにする</label>
+      <div class="row">
+        <button class="btn btn-main" id="pw-btn" onclick="checkPwned()">🔎 漏れていないか調べる</button>
+        <button class="btn btn-ghost" onclick="clearPw()">🗑 消す</button>
+      </div>
+      <div id="pw-result"></div>
+      <div class="hint">
+        🔒 パスワードそのものは、どこにも送りません。このスマホにも残しません。<br>
+        ⚠️ パスワードを入れてよいのは、いつも使っている公式アプリと、この画面のように仕組みを公開している道具だけです。
+        SMSやメールのリンクから開いた画面には、絶対に入れないでください。
+      </div>
+      <details class="pw-how">
+        <summary>どうやって調べているの？</summary>
+        入れたパスワードを、このスマホの中で「元に戻せない40文字の記号」に変えます。
+        そのうち<b>先頭の5文字だけ</b>を、世界中で使われている漏えい調べのサービス「Have I Been Pwned」に送ります。
+        すると、先頭が同じ記号が数百件まとめて返ってくるので、残りの35文字が同じものがあるかを、このスマホの中で見比べます。
+        相手に伝わるのは5文字だけなので、あなたのパスワードが何かは相手にも分かりません。通信するので、電波のある所で使ってください。
+      </details>
+    </div>
+
+    <div class="card">
+      <div class="label">🎲 強いパスワードを作る</div>
+      <div style="font-size:14px; line-height:1.75;">
+        このスマホの中だけで作ります。通信はせず、どこにも残しません。作ったものは紙に書いて家の中にしまうか、スマホの「パスワードを保存」に覚えさせてください。
+      </div>
+      <div class="row" style="margin-top:12px;">
+        <button class="btn btn-main" onclick="makePassword('random')">🔐 でたらめタイプ</button>
+        <button class="btn btn-judge" onclick="makePassword('words')">🌸 合言葉タイプ</button>
+      </div>
+      <div id="gen-box" style="display:none;">
+        <div class="gen-out" id="gen-out"></div>
+        <div class="row">
+          <button class="btn btn-ghost" onclick="copyGenerated()">📋 コピーする</button>
+          <button class="btn btn-ghost" onclick="clearGenerated()">🗑 消す</button>
+          <span class="hint" id="gen-msg" style="margin-top:0;"></span>
+        </div>
+      </div>
+      <div class="hint">
+        「でたらめタイプ」は銀行・証券・メール向け（いちばん強い）。「合言葉タイプ」は、毎日手で打つもの向けです。
+        サービスごとに作り直して、同じものを使い回さないでください。
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="label">📱 このスマホの検査</div>
+      <div style="font-size:14px; line-height:1.75;">
+        スマホの本体（Android）とブラウザが古くなっていないかを調べます。古いままだと、見つかっている弱点がふさがれていません。
+      </div>
+      <div class="row" style="margin-top:12px;">
+        <button class="btn btn-main" id="phone-btn" onclick="checkPhone()">🔎 このスマホを調べる</button>
+      </div>
+      <div id="phone-result"></div>
+
+      <div style="font-size:14px; line-height:1.75; margin-top:16px;">
+        <b>セキュリティ更新の日付を入れる</b>（いちばん大事な数字です）<br>
+        「設定」→「デバイス情報」→「Androidバージョン」→「Androidセキュリティアップデート」に出ている年と月を選んでください。
+      </div>
+      <input type="month" class="pw-input" id="patch-month" onchange="showPatchResult()">
+      <div id="patch-result"></div>
+
+      <div style="font-size:14px; line-height:1.75; margin-top:16px;"><b>あやしいアプリが入っていないかは、スマホ本体の検査で</b></div>
+      <div class="hint" style="margin-top:4px; font-size:13px;">
+        「Playストア」を開く→右上の丸いアイコン→「Play プロテクト」→「スキャン」。<br>
+        「設定」→「アプリ」→「特別なアプリアクセス」→「不明なアプリのインストール」で、「許可」になっているアプリがあれば「許可しない」に戻しましょう。
+      </div>
+      <div class="hint">
+        ※ このアプリは、スマホの中に入っているアプリやウイルスを調べることはできません（ブラウザの決まりで見えません）。
+        調べるのは「本体とブラウザの古さ」だけです。ブラウザの最新版を知るために、Googleの公開情報を1回だけ取りに行きます（あなたの情報は送りません）。
+      </div>
+    </div>
+
     <div class="homenote" style="margin-bottom:14px;">
       <b>ふだんの使い方を、3つのボタンで答えてください。</b><br>
       答えはこのスマホの中にだけ残り、どこにも送られません。「わからない」も大事な答えです。
     </div>
     <div class="card">
-      <div class="label">🔍 11の質問</div>
+      <div class="label">🔍 14の質問</div>
       <div id="check-questions"></div>
       <div class="row" style="margin-top:14px;">
         <button class="btn btn-main" onclick="showCheckResult(true)">📋 結果を見る</button>
@@ -555,7 +655,65 @@
       <div class="label">📋 あなたの結果</div>
       <div id="check-summary"></div>
       <div class="hint" style="margin-top:14px;">
-        ※ この結果は、上の11の質問についてだけのものです。スマホの中を調べたわけではなく、安全を保証するものではありません。
+        ※ この結果は、上の14の質問についてだけのものです。スマホの中を調べたわけではなく、安全を保証するものではありません。
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="label">📶 家のWi-Fiの親機（ルーター）は古くない？</div>
+      <div style="font-size:14px; line-height:1.75;">
+        古い親機は、メーカーの更新（弱点の修理）が止まっていて、家のネットの入口になることがあります。3つの質問で確かめます。
+      </div>
+      <div id="router-questions"></div>
+      <div class="hint">
+        暗号の種類の見かた（Android）：「設定」→「ネットワークとインターネット」→「Wi-Fi」→つないでいる名前を押す→「セキュリティ」。
+        「WPA2/WPA3」は WPA3、「WPA/WPA2」は WPA2 を選んでください。
+      </div>
+      <div class="row" style="margin-top:12px;">
+        <button class="btn btn-main" onclick="showRouterResult()">📋 親機の結果を見る</button>
+      </div>
+      <div id="router-result"></div>
+      <div style="font-size:14px; line-height:1.75; margin-top:16px;"><b>機種ごとに、メーカーの公式サイトで確かめる</b></div>
+      <select class="pw-input" id="router-maker"></select>
+      <input type="text" class="pw-input" id="router-model" placeholder="機種名（本体の裏のシール。例：WSR-1166DHP）"
+             autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="40">
+      <a class="callbtn b3" id="router-link" target="_blank" rel="noopener" onclick="setRouterLink()">🔎 公式サイトの中を検索する</a>
+      <div class="hint">
+        メーカーの公式サイトの中だけを、Googleで検索します（送るのはメーカー名と機種名だけです）。「サポート終了」「販売終了」の一覧に入っていたら、買いかえの目安です。
+        インターネットの会社から借りている親機は、契約先に聞くのが確実です。
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="label">🔗 公式の点検ページ（本物の記録で確かめる）</div>
+      <div style="font-size:14px; line-height:1.75;">
+        知らない端末からログインされていないか、漏れたパスワードが無いかは、サービスの会社自身がいちばん正確に知っています。下のボタンから公式のページを開いて確かめましょう。
+      </div>
+      <a class="callbtn b3" href="https://myaccount.google.com/security-checkup" target="_blank" rel="noopener">🛡️ Google セキュリティ診断</a>
+      <a class="callbtn b3" href="https://myaccount.google.com/device-activity" target="_blank" rel="noopener">📱 Google にログイン中の端末を見る</a>
+      <a class="callbtn b3" href="https://passwords.google.com/checkup" target="_blank" rel="noopener">🔑 Google に保存したパスワードの診断</a>
+      <div class="hint" style="font-size:13px;">
+        開いた画面のアドレスが「google.com」で終わっていることを確かめてからログインしてください。知らない端末があったら、その端末を選んで「ログアウト」し、パスワードを変えましょう。<br>
+        LINE：「設定」→「アカウント」→「ログイン中の端末」。<br>
+        iPhone：「設定」→自分の名前→下に並ぶ端末の一覧。
+      </div>
+      <div style="font-size:14px; line-height:1.75; margin-top:16px;"><b>メールアドレスが漏れていないか調べる</b></div>
+      <a class="callbtn b2" href="https://haveibeenpwned.com/" target="_blank" rel="noopener">📧 Have I Been Pwned を開く（英語）</a>
+      <div class="hint" style="font-size:13px;">
+        世界中で使われている、漏えい調べのサイトです（英語）。メールアドレスを入れて「Check」を押すと、どの会社から漏れたかが並びます。
+        入れるのはメールアドレスだけにしてください。漏れていたら、その会社のパスワードと、同じパスワードを使っているほかのサービスを変えましょう。
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="label">📅 月に1回、点検しましょう</div>
+      <div style="font-size:14px; line-height:1.75;" id="check-due"></div>
+      <div class="hint" style="margin-top:6px;">
+        このアプリは、閉じている間は自分からお知らせを出せません。カレンダーに毎月1日の予定を入れておくと、カレンダーが知らせてくれます。
+      </div>
+      <a class="callbtn b3" id="cal-link" target="_blank" rel="noopener">📅 Googleカレンダーに毎月の予定を入れる</a>
+      <div class="row" style="margin-top:10px;">
+        <button class="btn btn-ghost" onclick="downloadIcs()">ほかのカレンダー用のファイルを保存する</button>
       </div>
     </div>
   </div></div>
@@ -620,7 +778,7 @@ const SCREENS = {
   soudan: { title: '相談する',            sub: 'なんでも聞いてください' },
   judge:  { title: '録音を調べる',        sub: '通話のあとで詐欺かどうかを判定します' },
   help:   { title: 'だまされたかも',      sub: 'あわてない。上から順に、ひとつずつ' },
-  check:  { title: '弱点チェック',        sub: 'スマホとネットの使い方を見直します' },
+  check:  { title: 'サイバーセキュリティ対策', sub: 'パスワードの漏れと、使い方の弱点を調べます' },
   ayashii:{ title: 'これ、あやしい？',    sub: '番号・SMS・メール・リンクを、その場で見分けます' }
 };
 
@@ -1434,6 +1592,19 @@ const HELP_CASES = [
       '身に覚えのない請求書や契約の知らせが届いたら、払わずに消費者ホットライン（188）へ。',
       '身分証の写真を送った場合は、警察の相談電話（#9110）に相談する。'
     ]
+  },
+  {
+    title: 'スマホをなくした・盗まれた',
+    sub: '落とした・置き忘れた・ひったくられた',
+    steps: [
+      '家族のスマホやパソコンで「android.com/find」（iPhoneは「icloud.com/find」）を開き、自分のアカウントでログインする。場所を見る・音を鳴らす・遠くから画面に鍵をかける、ができます。',
+      '携帯会社に電話して、回線を止めてもらう。夜や休日でも受け付けています。止めると、勝手な通話や、SMSで届く確認番号の横取りを防げます。',
+      'スマホ決済（PayPayなど）や、スマホに入れたカード・交通系ICを止める。それぞれの会社の窓口か、会員ページから止められます。',
+      '別の端末から、Google（またはApple）・メール・LINE・銀行や証券のパスワードを変える。',
+      '交番か警察署に届け出る（落としたなら遺失届、盗まれたなら被害届）。受理番号は、携帯会社の補償や保険で使います。',
+      'もう戻らないと分かったら、手順1の画面から中身を消す。消すと場所は追えなくなるので、最後の手段です。'
+    ],
+    note: '場所が分かっても、自分で取り返しに行かないでください。警察に伝えましょう。「スマホが見つかりました」というSMSやメールのリンクは、パスワードを盗む偽物のことがあります。開かないでください。'
   }
 ];
 
@@ -1491,6 +1662,9 @@ const CHECK_ITEMS = [
   { id: 'link', w: 5,
     q: 'SMSやメールのリンクからは、ログインやカード番号の入力をしない',
     fix: '偽サイトの入口は、ほとんどがSMSやメールのリンクです。銀行・通販・宅配は、いつも使っている公式アプリか、自分で登録したお気に入り（ブックマーク）から開く、と決めておきましょう。' },
+  { id: 'passkey', w: 4,
+    q: '銀行・証券・メールで「パスキー」が使えるところは、設定している',
+    fix: 'パスキーは、パスワードの代わりに指紋・顔・画面ロックでログインする仕組みです。本物のサイトでしか働かないので、偽サイトにだまされても盗まれません。各サービスの「設定」→「セキュリティ」→「パスキー」から登録できます。証券会社とGoogleから先につけましょう。' },
   { id: 'family', w: 4,
     q: 'お金の話（振込・投資・電子マネー）が出たら家族に相談する、と家族で決めてある',
     fix: '詐欺は「誰にも言わないで」と一人にさせる手口です。「お金の話が出たら、まず電話する」と家族で約束し、家族だけが知る合言葉を1つ決めておきましょう。' },
@@ -1503,9 +1677,15 @@ const CHECK_ITEMS = [
   { id: 'lock', w: 3,
     q: 'スマホに画面ロック（暗証番号・指紋・顔）をかけている',
     fix: '落としたとき・盗まれたときに、中身と決済アプリを守る最後のカギです。「設定」→「セキュリティ」→「画面ロック」からかけましょう。誕生日や1234は避けてください。' },
+  { id: 'find', w: 3,
+    q: 'スマホをなくしたときに場所を探せる機能（デバイスを探す）を、オンにしている',
+    fix: 'オンにしておくと、なくしたときに別の端末から場所を見たり、遠くから鍵をかけたり、中身を消したりできます。Androidは「設定」→「セキュリティ」→「デバイスを探す」、iPhoneは「設定」→自分の名前→「探す」でオンにします。なくしてからではオンにできません。' },
   { id: 'notify', w: 3,
     q: 'カードや銀行を使ったら、メールやアプリで知らせが来るようにしている',
     fix: '知らせが来れば、勝手に使われたその日に気づけます。カード会社・銀行のアプリや会員ページの「利用通知」をオンにしましょう。' },
+  { id: 'backup', w: 3,
+    q: '大事な写真や書類の控え（バックアップ）を、スマホやパソコンの本体とは別の場所にもとっている',
+    fix: 'データを人質にとるウイルス（ランサムウェア）や故障・紛失のとき、控えがあれば元に戻せます。写真はGoogleフォトなどの自動バックアップをオンに。パソコンの大事な書類は、外付けのUSBメモリやハードディスクにも写し、写し終わったら抜いておきましょう（つないだままだと一緒にやられます）。' },
   { id: 'phone', w: 3,
     q: '知らない番号・非通知・「+」で始まる国際電話には出ない（留守番電話で受けている）',
     fix: 'いつも留守番電話にしておき、名前と用件を聞いてからかけ直すのが安全です。固定電話は「国際電話不取扱受付センター」に申し込むと、国際電話を無料で止められます。' },
@@ -1597,6 +1777,13 @@ function showCheckResult(scroll) {
     line.textContent = '✅ 今回の質問の中では、弱点は見つかりませんでした';
   }
   box.appendChild(line);
+  // 点数は「危なさ（w）」で重みをつける。わからない・未回答は点に入れない
+  const total = CHECK_ITEMS.reduce(function (s, x) { return s + x.w; }, 0);
+  const got = CHECK_ITEMS.reduce(function (s, x) { return s + (answers[x.id] === 'ok' ? x.w : 0); }, 0);
+  const score = document.createElement('div');
+  score.className = 'sumline';
+  score.textContent = '点数：' + Math.round(got / total * 100) + '点／100点';
+  box.appendChild(score);
   const sub = document.createElement('div');
   sub.className = 'hint';
   sub.style.marginTop = '0';
@@ -1616,7 +1803,471 @@ function showCheckResult(scroll) {
 
   const card = el('check-result-card');
   card.style.display = 'block';
-  if (scroll) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  if (scroll) {
+    // 「結果を見る」を押した日を、点検した日として残す
+    localStorage.setItem(CHECK_LAST, new Date().toISOString().slice(0, 10));
+    updateCheckDue();
+    card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+// ════════ 強いパスワードを作る ════════
+// このスマホの中だけで作る（通信しない・保存しない）。
+// さいころは crypto.getRandomValues（暗号用の乱数）を使う。Math.random は予測されうるので使わない。
+const GEN_CHARS = 'abcdefghjkmnpqrstuvwxyz23456789';   // 見まちがえやすい 0 o 1 l i は入れない
+const GEN_WORDS = Array.from(new Set(('sakura mikan tokei kasa neko inu tori sora umi yama kawa hana kumo ame yuki kaze hoshi tsuki taiyo mori ' +
+  'hayashi ishi suna nami shima mizu ocha gohan pan niku sakana tamago yasai ringo budou momo kaki nashi suika ichigo ' +
+  'banana remon mame kome mochi soba udon sushi nori miso shio satou kutsu boushi megane kaban saifu kagi hon pen ' +
+  'kami hako isu tsukue mado tobira yane kabe niwa michi hashi eki densha basu kuruma fune hikouki jitensha machi mura ' +
+  'mise ginkou gakkou kouen byouin tera shiro hiroba asa hiru yoru haru natsu aki fuyu kyou ashita aka ao kiiro ' +
+  'midori kuro murasaki chairo kin gin uma ushi buta saru kuma kitsune tanuki usagi nezumi zou kirin tora hebi kame ' +
+  'kaeru kujira iruka tako ika ebi kani hato karasu suzume tsuru taka semi tonbo chou ari hachi matsu take ume ' +
+  'kiku yuri bara tane eda happa kagami denwa terebi rajio kamera piano taiko fue uta odori matsuri hanabi koma origami ' +
+  'tegami kitte chizu tabi onsen yuuhi niji kaminari kiri').split(' ')));
+
+// 0〜n-1 の数を、かたよりなく1つ選ぶ
+function randInt(n) {
+  const limit = Math.floor(0x100000000 / n) * n;
+  const buf = new Uint32Array(1);
+  do { crypto.getRandomValues(buf); } while (buf[0] >= limit);
+  return buf[0] % n;
+}
+
+function makePassword(kind) {
+  let pw;
+  if (kind === 'words') {
+    // ことば4つ＋数字2けた。先頭だけ大文字（大文字が必要なサービス向け）
+    const w = [];
+    while (w.length < 4) {
+      const x = GEN_WORDS[randInt(GEN_WORDS.length)];
+      if (w.indexOf(x) === -1) w.push(x);
+    }
+    w[0] = w[0].charAt(0).toUpperCase() + w[0].slice(1);
+    pw = w.join('-') + '-' + (10 + randInt(90));
+  } else {
+    // 4文字×4組。先頭だけ大文字
+    const g = [];
+    for (let i = 0; i < 4; i++) {
+      let s = '';
+      for (let j = 0; j < 4; j++) s += GEN_CHARS[randInt(GEN_CHARS.length)];
+      g.push(s);
+    }
+    pw = g.join('-');
+    pw = pw.charAt(0).toUpperCase() + pw.slice(1);
+  }
+  el('gen-out').textContent = pw;
+  el('gen-msg').textContent = '';
+  el('gen-box').style.display = 'block';
+}
+
+function copyGenerated() {
+  const pw = el('gen-out').textContent;
+  const done = function (ok) {
+    el('gen-msg').textContent = ok ? '✅ コピーしました' : '長押しして、手でコピーしてください';
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(pw).then(function () { done(true); }, function () { done(false); });
+  } else {
+    done(false);
+  }
+}
+
+function clearGenerated() {
+  el('gen-out').textContent = '';
+  el('gen-box').style.display = 'none';
+}
+
+// ════════ このスマホの検査 ════════
+// Webアプリから見えるのは「Androidの版」と「ブラウザの版」だけ。中のアプリやウイルスは見えない。
+// 下の表は古くなるので、いつの時点の表かを画面に出す。Androidの新しい版が出たら数字を1つずつ上げる。
+const OS_TABLE_ASOF = '2026年10月';
+const ANDROID_ENDED = 13;     // この版以下は、Googleによる弱点の修理が終わっている
+const ANDROID_OLDEST = 14;    // 修理が続いている中でいちばん古い版（次に終わる）
+const CHROME_LATEST_API = 'https://versionhistory.googleapis.com/v1/chrome/platforms/android/channels/stable/versions?pageSize=1&order_by=version%20desc';
+
+async function phoneInfo() {
+  const ua = navigator.userAgent;
+  const info = { os: '', osVer: null, chrome: null, isChrome: false };
+  const uad = navigator.userAgentData;
+  if (uad && uad.getHighEntropyValues) {
+    // 新しいChromeは、UAの文字列に本当のAndroidの版を書かない（いつも「10」）。こちらで聞く
+    try {
+      const h = await uad.getHighEntropyValues(['platformVersion']);
+      info.os = uad.platform || '';
+      info.osVer = parseInt(h.platformVersion, 10) || null;
+    } catch (e) {}
+  }
+  if (!info.os) {
+    let m;
+    if ((m = ua.match(/Android (\d+)/))) { info.os = 'Android'; info.osVer = parseInt(m[1], 10); }
+    else if ((m = ua.match(/(?:iPhone|iPad).*? OS (\d+)_/))) { info.os = 'iOS'; info.osVer = parseInt(m[1], 10); }
+    else if (/Windows/.test(ua)) info.os = 'Windows';
+    else if (/Mac OS X/.test(ua)) info.os = 'macOS';
+  }
+  const c = ua.match(/Chrome\/(\d+)/);
+  if (c) info.chrome = parseInt(c[1], 10);
+  info.isChrome = !!c && !/Edg\/|SamsungBrowser|OPR\/|YaBrowser/.test(ua);
+  return info;
+}
+
+function addResultBox(box, cls, title, text) {
+  const d = document.createElement('div');
+  d.className = 'pw-result ' + cls;
+  const b = document.createElement('b');
+  b.textContent = title;
+  d.appendChild(b);
+  d.appendChild(document.createTextNode(text));
+  box.appendChild(d);
+}
+
+async function checkPhone() {
+  const btn = el('phone-btn');
+  btn.disabled = true;
+  btn.textContent = '調べています…';
+  const box = el('phone-result');
+  box.innerHTML = '';
+  try {
+    const info = await phoneInfo();
+
+    // ① 本体（Android）の版
+    if (info.os === 'Android' && info.osVer) {
+      const name = 'Android ' + info.osVer;
+      if (info.osVer <= ANDROID_ENDED) {
+        addResultBox(box, 'bad', '🚫 本体：' + name + '（弱点の修理が終わっています）',
+          'この版は、Googleによる弱点の修理が終わっています（' + OS_TABLE_ASOF + '時点）。「設定」→「システム」→「ソフトウェアの更新」で新しい版が来ていないか確かめ、来ていなければ買いかえの目安です。それまでは、銀行や証券の操作をこのスマホでするのは控えめに。');
+      } else if (info.osVer === ANDROID_OLDEST) {
+        addResultBox(box, 'warn', '⚠️ 本体：' + name + '（修理が続いている中で、いちばん古い版）',
+          'いまは修理が続いていますが、次に終わる版です（' + OS_TABLE_ASOF + '時点）。更新が来ていないか確かめましょう。');
+      } else {
+        addResultBox(box, 'none', '✅ 本体：' + name + '（修理が続いている版）',
+          '版は新しいです（' + OS_TABLE_ASOF + '時点）。ただし、毎月の更新が入っているかは下の「セキュリティ更新の日付」で確かめてください。');
+      }
+    } else if (info.os === 'iOS') {
+      addResultBox(box, 'warn', '🤔 本体：iPhone・iPad（iOS ' + (info.osVer || '?') + '）',
+        'iPhoneの版の新しさは、このアプリでは判定していません。「設定」→「一般」→「ソフトウェアアップデート」を開き、「最新です」と出るか確かめてください。');
+    } else {
+      addResultBox(box, 'warn', '🤔 本体：' + (info.os || '不明') + '（スマホではないようです）',
+        'この検査はAndroidのスマホ向けです。調べたいスマホでこの画面を開いてください。');
+    }
+
+    // ② ブラウザ（Chrome）の版
+    if (info.isChrome && info.chrome) {
+      let latest = null;
+      try {
+        const res = await fetch(CHROME_LATEST_API, { cache: 'no-store' });
+        const j = await res.json();
+        latest = parseInt(j.versions[0].version, 10) || null;
+      } catch (e) {}
+      if (!latest) {
+        addResultBox(box, 'warn', '🤔 ブラウザ：Chrome ' + info.chrome + '（最新版と比べられませんでした）',
+          '電波の届く所でもう一度ためすか、「Playストア」→右上の丸いアイコン→「アプリとデバイスの管理」で、Chromeの更新がたまっていないか確かめてください。');
+      } else if (latest - info.chrome >= 4) {
+        addResultBox(box, 'bad', '🚫 ブラウザ：Chrome ' + info.chrome + '（最新は ' + latest + '・かなり古い）',
+          'ブラウザは、あやしいサイトからスマホを守る壁です。「Playストア」→右上の丸いアイコン→「アプリとデバイスの管理」→「すべて更新」で新しくしましょう。');
+      } else if (latest - info.chrome >= 2) {
+        addResultBox(box, 'warn', '⚠️ ブラウザ：Chrome ' + info.chrome + '（最新は ' + latest + '・少し古い）',
+          '「Playストア」→右上の丸いアイコン→「アプリとデバイスの管理」→「すべて更新」で新しくしましょう。アプリの自動更新をオンにしておくと安心です。');
+      } else {
+        addResultBox(box, 'none', '✅ ブラウザ：Chrome ' + info.chrome + '（最新は ' + latest + '）', '新しい版です。');
+      }
+    } else {
+      addResultBox(box, 'warn', '🤔 ブラウザ：Chrome以外で開いています',
+        'ブラウザの版は判定していません。ストアで、いま使っているブラウザの更新がたまっていないか確かめてください。');
+    }
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🔎 このスマホを調べる';
+  }
+}
+
+// 設定画面で見た「Androidセキュリティアップデート」の年月から、更新の遅れを出す
+function showPatchResult() {
+  const box = el('patch-result');
+  box.innerHTML = '';
+  const m = /^(\d{4})-(\d{2})$/.exec(el('patch-month').value);
+  if (!m) return;
+  const now = new Date();
+  const behind = (now.getFullYear() - Number(m[1])) * 12 + (now.getMonth() + 1 - Number(m[2]));
+  if (behind < 0) {
+    addResultBox(box, 'warn', '🤔 先の日付になっています', '年と月を、もう一度確かめてください。');
+  } else if (behind > 6) {
+    addResultBox(box, 'bad', '🚫 更新が ' + behind + 'か月 止まっています',
+      '半年以上、弱点の修理が入っていません。「設定」→「システム」→「ソフトウェアの更新」で更新を確かめ、「最新です」と出るのにこの日付なら、メーカーの更新が終わった機種です。買いかえの目安です。');
+  } else if (behind > 3) {
+    addResultBox(box, 'warn', '⚠️ 更新が ' + behind + 'か月 前のままです',
+      '「設定」→「システム」→「ソフトウェアの更新」で、更新がたまっていないか確かめましょう。機種によっては2〜3か月に1回の更新です。');
+  } else {
+    addResultBox(box, 'none', '✅ 最近（3か月以内）の更新が入っています',
+      'この調子で、更新の知らせが来たら後回しにせず入れましょう。');
+  }
+}
+
+// ════════ 月に1回の点検 ════════
+// Webアプリは閉じている間に通知を出せないので、①開いたときに「前回から何日」を出す
+// ②カレンダーに毎月の予定を入れてもらう、の2つで思い出してもらう。
+const CHECK_LAST = 'kurashi_check_last';
+const CHECK_EVERY_DAYS = 30;
+const APP_URL = 'https://tomonori2.github.io/kurashi-anzen/#check';
+const CAL_TITLE = 'スマホとネットの点検（くらしの安全相談AI）';
+const CAL_DETAIL = '月に1回の点検日です。パスワードの漏れと、使い方の弱点を見直しましょう。';
+
+function daysSinceCheck() {
+  const s = localStorage.getItem(CHECK_LAST);
+  const t = s ? Date.parse(s) : NaN;
+  if (isNaN(t)) return null;
+  return Math.max(0, Math.floor((Date.now() - t) / 86400000));
+}
+
+function updateCheckDue() {
+  const d = daysSinceCheck();
+  let home = '', here = 'まだ点検の記録がありません。上の14の質問に答えて「結果を見る」を押すと、点検した日が残ります。';
+  if (d !== null) {
+    const due = d >= CHECK_EVERY_DAYS;
+    here = (d === 0 ? '前回の点検：きょう' : '前回の点検：' + d + '日前') + (due ? '　⏰ そろそろ点検の時期です。' : '');
+    home = due ? '　⏰ 前回の点検から' + d + '日たちました。' : '';
+  }
+  el('check-due').textContent = here;
+  el('check-due-home').textContent = home;
+}
+
+// 次の月の1日（YYYYMMDD）と、その翌日
+function nextFirstDay() {
+  const now = new Date();
+  const fmt = function (dt) {
+    return dt.getFullYear() + String(dt.getMonth() + 1).padStart(2, '0') + String(dt.getDate()).padStart(2, '0');
+  };
+  return [fmt(new Date(now.getFullYear(), now.getMonth() + 1, 1)), fmt(new Date(now.getFullYear(), now.getMonth() + 1, 2))];
+}
+
+function setCalendarLink() {
+  const d = nextFirstDay();
+  el('cal-link').href = 'https://calendar.google.com/calendar/render?action=TEMPLATE' +
+    '&text=' + encodeURIComponent(CAL_TITLE) +
+    '&dates=' + d[0] + '/' + d[1] +
+    '&recur=' + encodeURIComponent('RRULE:FREQ=MONTHLY') +
+    '&details=' + encodeURIComponent(CAL_DETAIL + '\n' + APP_URL);
+}
+
+// iPhoneなど、Googleカレンダー以外に入れるためのファイル（.ics）
+function downloadIcs() {
+  const d = nextFirstDay();
+  const ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//kurashi-anzen//JA', 'BEGIN:VEVENT',
+    'UID:kurashi-anzen-check@tomonori2.github.io',
+    'DTSTAMP:' + new Date().toISOString().replace(/[-:]/g, '').slice(0, 15) + 'Z',
+    'DTSTART;VALUE=DATE:' + d[0], 'DTEND;VALUE=DATE:' + d[1], 'RRULE:FREQ=MONTHLY',
+    'SUMMARY:' + CAL_TITLE, 'DESCRIPTION:' + CAL_DETAIL + ' ' + APP_URL,
+    'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([ics], { type: 'text/calendar' }));
+  a.download = 'tenken.ics';
+  a.click();
+  setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+}
+
+// ════════ 家のWi-Fiの親機（ルーター）の古さ ════════
+// 機種の一覧は持たない（すぐ古くなり、間違った答えを出すため）。
+// 年数・暗号の種類・自動更新の3つで目安を出し、機種ごとの確認はメーカー公式サイトの検索に任せる。
+const ROUTER_QS = [
+  { id: 'age', q: '1．買ってから（借りてから）何年くらいですか',
+    a: [['new', '3年以内'], ['mid', '4〜6年'], ['old', '7年以上'], ['unk', 'わからない']] },
+  { id: 'enc', q: '2．スマホのWi-Fiの画面に出る「セキュリティ」（暗号の種類）は',
+    a: [['wpa3', 'WPA3'], ['wpa2', 'WPA2'], ['weak', 'WEP・WPA'], ['unk', 'わからない']] },
+  { id: 'upd', q: '3．親機の「自動更新（ファームウェアの自動更新）」は',
+    a: [['on', 'オン'], ['off', 'オフ・ない'], ['unk', 'わからない']] }
+];
+const ROUTER_MAKERS = [
+  ['バッファロー', 'buffalo.jp'], ['NEC（Aterm）', 'aterm.jp'], ['エレコム', 'elecom.co.jp'],
+  ['アイ・オー・データ', 'iodata.jp'], ['TP-Link', 'tp-link.com'], ['ASUS', 'asus.com'],
+  ['その他・わからない', '']
+];
+const routerAns = {};   // 画面を閉じたら消える（保存しない）
+
+function renderRouter() {
+  const box = el('router-questions');
+  box.innerHTML = '';
+  ROUTER_QS.forEach(function (item) {
+    const q = document.createElement('div');
+    q.className = 'qbox';
+    const t = document.createElement('div');
+    t.className = 'qtext';
+    t.textContent = item.q;
+    q.appendChild(t);
+    const row = document.createElement('div');
+    row.className = 'ans';
+    item.a.forEach(function (a) {
+      const b = document.createElement('button');
+      b.textContent = a[1];
+      if (routerAns[item.id] === a[0]) b.className = 'on ok';
+      b.onclick = function () {
+        routerAns[item.id] = a[0];
+        renderRouter();
+        if (el('router-result').innerHTML) showRouterResult();
+      };
+      row.appendChild(b);
+    });
+    q.appendChild(row);
+    box.appendChild(q);
+  });
+}
+
+function showRouterResult() {
+  const bad = [], warn = [];
+  const age = routerAns.age || 'unk', enc = routerAns.enc || 'unk', upd = routerAns.upd || 'unk';
+  if (enc === 'weak') bad.push('暗号が古い（WEP・WPA）。近くにいる人に通信をのぞかれたり、勝手に使われたりします。親機の設定でWPA2かWPA3に変えましょう。選べない機種は買いかえを。');
+  if (age === 'old') bad.push('7年以上たっています。メーカーの更新が止まっている機種が多い年数です。下の「公式サイトの中を検索する」で、サポートが続いているか確かめましょう。');
+  if (age === 'mid') warn.push('4〜6年たっています。まだ使えることが多いですが、サポートが続いているかを一度確かめましょう。');
+  if (upd === 'off') warn.push('自動更新がオフ、または機能がありません。管理画面で更新を自動にするか、ときどき手で更新しましょう。');
+  if (enc === 'wpa2') warn.push('WPA2はいまも使えます。次に買いかえるときは、WPA3が使える機種を選びましょう。');
+  const unk = [];
+  if (age === 'unk') unk.push('買った時期：本体の裏のシールの機種名で、下の検索から確かめられます。');
+  if (enc === 'unk') unk.push('暗号の種類：この下の「見かた」の手順で確かめられます。');
+  if (upd === 'unk') unk.push('自動更新：説明書か、買った店・家族と一緒に管理画面で確かめましょう。');
+
+  const box = el('router-result');
+  box.innerHTML = '';
+  const add = function (cls, title, list) {
+    const d = document.createElement('div');
+    d.className = 'pw-result ' + cls;
+    const b = document.createElement('b');
+    b.textContent = title;
+    d.appendChild(b);
+    if (list.length) {
+      const ul = document.createElement('ul');
+      list.forEach(function (t) { const li = document.createElement('li'); li.textContent = t; ul.appendChild(li); });
+      d.appendChild(ul);
+    }
+    box.appendChild(d);
+  };
+  if (bad.length) add('bad', '🚫 早めに直したほうがいい点：' + bad.length + 'つ', bad);
+  if (warn.length) add('warn', '⚠️ 気をつけたい点：' + warn.length + 'つ', warn);
+  if (unk.length) add('warn', '🤔 わからなかった点：' + unk.length + 'つ', unk);
+  if (!bad.length && !warn.length && !unk.length) {
+    add('none', '✅ 3つの質問の中では、古さの心配は見つかりませんでした', ['ただし安全を保証するものではありません。管理用パスワードを買ったときのままにしないことも大事です。']);
+  }
+}
+
+function setRouterLink() {
+  const site = el('router-maker').value;
+  // 機種名は英数字・ハイフンなどだけを通す（検索の文に余計な命令を混ぜさせない）
+  const model = el('router-model').value.replace(/[^0-9A-Za-z\-_+\/ ]/g, '').trim();
+  const q = (site ? 'site:' + site + ' ' : '') + (model || 'Wi-Fiルーター') + ' サポート終了';
+  el('router-link').href = 'https://www.google.com/search?q=' + encodeURIComponent(q);
+}
+
+function initRouter() {
+  const sel = el('router-maker');
+  ROUTER_MAKERS.forEach(function (m) {
+    const o = document.createElement('option');
+    o.value = m[1];
+    o.textContent = m[0];
+    sel.appendChild(o);
+  });
+  renderRouter();
+  setRouterLink();
+}
+
+// ════════ パスワード漏れ調べ ════════
+// 入れたパスワードは送らない・保存しない。
+// このスマホの中でSHA-1という「元に戻せない40文字の記号」に変え、先頭5文字だけを
+// Have I Been Pwned に送る。返ってきた候補（残り35文字の一覧）と、手元で見比べる。
+const PWNED_API = 'https://api.pwnedpasswords.com/range/';
+
+async function sha1Hex(text) {
+  const buf = await crypto.subtle.digest('SHA-1', new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf)).map(function (b) {
+    return b.toString(16).padStart(2, '0');
+  }).join('').toUpperCase();
+}
+
+// 漏れた一覧にあった回数を返す（無ければ0）
+async function pwnedCount(password) {
+  const hash = await sha1Hex(password);
+  const head = hash.slice(0, 5), tail = hash.slice(5);
+  const res = await fetch(PWNED_API + head, { cache: 'no-store' });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const lines = (await res.text()).split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    const p = lines[i].trim().split(':');
+    if (p[0] === tail) return parseInt(p[1], 10) || 0;
+  }
+  return 0;
+}
+
+// 通信しなくても分かる「破られやすさ」
+function pwWeakPoints(pw) {
+  const out = [];
+  const n = Array.from(pw).length;
+  if (n < 12) out.push('短い（' + n + '文字）。12文字以上が目安です');
+  if (/^\d+$/.test(pw)) out.push('数字だけ。誕生日や電話番号は最初に試されます');
+  else if (/^[a-zA-Z]+$/.test(pw)) out.push('英字だけ。数字や記号も混ぜましょう');
+  if (/^(.)\1+$/.test(pw)) out.push('同じ文字のくり返し');
+  return out;
+}
+
+function showPwResult(cls, title, text, list) {
+  const box = el('pw-result');
+  box.innerHTML = '';
+  const d = document.createElement('div');
+  d.className = 'pw-result ' + cls;
+  const b = document.createElement('b');
+  b.textContent = title;
+  d.appendChild(b);
+  d.appendChild(document.createTextNode(text));
+  if (list && list.length) {
+    const ul = document.createElement('ul');
+    list.forEach(function (t) {
+      const li = document.createElement('li');
+      li.textContent = t;
+      ul.appendChild(li);
+    });
+    d.appendChild(ul);
+  }
+  box.appendChild(d);
+}
+
+async function checkPwned() {
+  const pw = el('pw-input').value;
+  if (!pw) { showPwResult('warn', '調べたいパスワードを入れてください', ''); return; }
+  if (!window.crypto || !crypto.subtle) {
+    showPwResult('warn', 'このブラウザでは調べられません', 'Chromeなどの新しいブラウザで開き直してください。');
+    return;
+  }
+  const btn = el('pw-btn');
+  btn.disabled = true;
+  btn.textContent = '調べています…';
+  try {
+    const count = await pwnedCount(pw);
+    const weak = pwWeakPoints(pw);
+    if (count > 0) {
+      showPwResult('bad', '🚫 漏れたパスワードの中に、' + count.toLocaleString() + '回 見つかりました',
+        'あなたのものが漏れたとは限りませんが、犯人が最初に試す一覧に入っています。もう使わないでください。', [
+          'このパスワードを使っているサービスを、すべて別のものに変える（メールと銀行から先に）',
+          '変えるときは、サービスごとに違うパスワードにする',
+          'メールと銀行には二段階認証をつける'
+        ].concat(weak.map(function (t) { return 'このパスワードの弱い点：' + t; })));
+    } else if (weak.length) {
+      showPwResult('warn', '⚠️ 漏れた一覧には見つかりませんが、破られやすい形です',
+        '一覧に無くても、次のようなパスワードは機械で順番に試すと当たってしまいます。', weak);
+    } else {
+      showPwResult('none', '✅ 漏れた一覧には見つかりませんでした',
+        'ただし安全を保証するものではありません。まだ知られていない漏れは調べられません。使い回しをしないことと、二段階認証をつけることが、いちばんの守りです。');
+    }
+  } catch (e) {
+    showPwResult('warn', '調べられませんでした',
+      '電波の届く所で、もう一度ためしてください。それでもだめなときは、時間をおいてください。');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🔎 漏れていないか調べる';
+  }
+}
+
+function togglePwShow() {
+  el('pw-input').type = el('pw-show').checked ? 'text' : 'password';
+}
+
+function clearPw() {
+  el('pw-input').value = '';
+  el('pw-result').innerHTML = '';
 }
 
 // ════════ 設定 ════════
@@ -1815,7 +2466,7 @@ function ayRecord() {
 }
 
 // スマホが古い版を掴んでいないか一目で分かるように、画面に版数を出しておく
-const APP_VERSION = 'v1.4（これ、あやしい？）';
+const APP_VERSION = 'v1.5（サイバーセキュリティ対策）';
 
 // ご意見フォーム（Googleフォーム）の共有リンク。空のあいだはボタンを出さない。
 // ※公開してよいリンクなので、ここに直接書いてかまわない（秘密の情報ではない）。
@@ -1875,6 +2526,9 @@ window.addEventListener('load', function () {
   renderCuratedDangerList();
   renderHelpChoices();
   renderCheckQuestions();
+  initRouter();
+  setCalendarLink();
+  updateCheckDue();
   ayRenderSamples();
   // いつ取ってきた情報かを画面に出す。自動更新が止まったとき日付が古いままになるので、
   // 「動いていない」ことに気づける。

@@ -15,7 +15,8 @@
   "shortcuts": [
     { "name": "いま電話が来ている", "short_name": "通話中", "url": "./#call" },
     { "name": "だまされたかも・やってしまった", "short_name": "応急手当", "url": "./#help" },
-    { "name": "相談する", "short_name": "相談", "url": "./#soudan" }
+    { "name": "相談する", "short_name": "相談", "url": "./#soudan" },
+    { "name": "サイバーセキュリティ対策", "short_name": "弱点チェック", "url": "./#check" }
   ],
   "share_target": {
     "action": "./share-target/",
