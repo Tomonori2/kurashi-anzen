@@ -68,6 +68,45 @@
   .bigbtn.judge  { background: linear-gradient(135deg, #6a51a8, #3f2f6b); }
   .bigbtn.help   { background: linear-gradient(135deg, #e07b1a, #a8500c); }
   .bigbtn.check  { background: linear-gradient(135deg, #2e8b57, #1c5c39); }
+  .bigbtn.ayashii { background: linear-gradient(135deg, #0f7c8c, #0a5560); }
+
+  /* ===== これ、あやしい？（番号・SMS・メール・リンクの判定） ===== */
+  .ay-text {
+    width: 100%; min-height: 110px; font-size: 16px; padding: 12px; line-height: 1.6;
+    border: 1px solid #c8d4e4; border-radius: 10px; font-family: inherit; resize: vertical;
+  }
+  .ay-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .ay-chips button {
+    border: 1px solid #c8d4e4; background: #f4f7fb; color: #556; border-radius: 16px;
+    padding: 6px 11px; font-size: 12px; font-family: inherit; cursor: pointer;
+  }
+  .ay-verdict {
+    border-radius: 14px; padding: 14px 16px; margin-bottom: 12px;
+    border: 2px solid #9cc7a8; background: #eaf6ee; color: #1b6e3c;
+  }
+  .ay-verdict.danger { background: #fdecea; border-color: #d0342c; color: #8c1c17; }
+  .ay-verdict.warn   { background: #fff6e5; border-color: #e0a800; color: #7a5218; }
+  .ay-verdict .big  { font-size: 22px; font-weight: bold; line-height: 1.4; }
+  .ay-verdict .lead { font-size: 14px; color: #223; margin-top: 4px; }
+  ul.ay-list { list-style: none; margin: 0; padding: 0; }
+  ul.ay-list li {
+    position: relative; padding: 9px 0 9px 28px; font-size: 15px; line-height: 1.7;
+    border-bottom: 1px dashed #dde4ee;
+  }
+  ul.ay-list li:last-child { border-bottom: none; }
+  ul.ay-list li::before { position: absolute; left: 0; top: 9px; }
+  ul.ay-todo li::before { content: "👉"; }
+  ul.ay-why li.r3::before { content: "🚫"; }
+  ul.ay-why li.r2::before { content: "⚠️"; }
+  ul.ay-why li.r1::before { content: "ℹ️"; }
+  ul.ay-why li.r0::before { content: "✅"; }
+  ul.ay-why .what { font-weight: bold; }
+  ul.ay-why .why  { display: block; font-size: 13px; color: #6a7a90; }
+  ul.ay-why .src  {
+    display: inline-block; font-size: 11px; color: #6a7a90; background: #eef2f7;
+    border-radius: 8px; padding: 0 7px; word-break: break-all;
+  }
+  .ay-actions .btn { width: 100%; margin-top: 8px; }
 
   /* ===== 応急手当（やってしまった） ===== */
   .choice {
@@ -299,6 +338,10 @@
       <span class="t">📞 いま電話が来ている</span>
       <span class="d">通話しながら見る画面です。設定なしですぐ使えます。あやしい番号かどうかも調べられます。</span>
     </button>
+    <button class="bigbtn ayashii" onclick="go('ayashii')">
+      <span class="t">🔍 これ、あやしい？</span>
+      <span class="d">届いたSMS・メール、かかってきた番号、リンクを貼るだけ。その場で見分けて理由と対処を出します。設定なし・入力はどこにも送りません。</span>
+    </button>
     <button class="bigbtn help" onclick="go('help')">
       <span class="t">🚑 だまされたかも・やってしまった</span>
       <span class="d">カード番号を入れた、お金を振り込んだ、あやしいアプリを入れた…。いますぐやることを順番に出します。設定なしで使えます。</span>
@@ -366,6 +409,27 @@
         <button class="btn btn-ghost" onclick="addDangerNumber()">＋追加</button>
       </div>
     </div>
+  </div></div>
+</div>
+
+<!-- ══════════ これ、あやしい？（番号・SMS・メール・リンクの判定） ══════════ -->
+<div class="screen" id="screen-ayashii">
+  <div class="scroll"><div class="inner">
+    <div class="card">
+      <div class="label">🔍 しらべたいものを、ここに入れる</div>
+      <textarea class="ay-text" id="ay-q" placeholder="例）かかってきた電話番号&#10;例）届いたSMSやメールの文章をそのまま貼り付け&#10;例）リンク（URL）"></textarea>
+      <div class="row" style="margin-top:8px;">
+        <button class="btn btn-ghost" onclick="ayPaste()">📋 貼り付け</button>
+        <button class="btn btn-ghost" onclick="ayClear()">🗑 消す</button>
+        <button class="btn btn-main" style="flex:1; min-width:140px;" onclick="ayRun()">🔍 しらべる</button>
+      </div>
+      <div class="ay-chips" id="ay-samples"></div>
+      <div class="hint">
+        ここに入れた内容は、<b>このスマホの中だけ</b>で調べます。どこにも送りません。<br>
+        番号の大きなリストではなく、詐欺に共通する特徴（番号の種類・ニセのリンクの作り・急がせる言い回し）で見分けます。上の例を押すと試せます。
+      </div>
+    </div>
+    <div id="ay-result"></div>
   </div></div>
 </div>
 
@@ -515,6 +579,7 @@
 <script src="news_data.js" onerror="window.SCAM_NEWS = []"></script>
 <script src="curated_news.js" onerror="window.CURATED_NEWS = []"></script>
 <script src="curated_danger_numbers.js" onerror="window.CURATED_DANGER_NUMBERS = []"></script>
+<script src="ayashii_engine.js" onerror="window.Ayashii = null"></script>
 <script>
 // ════════════════════════════════════════════
 //  くらしの安全相談AI
@@ -555,7 +620,8 @@ const SCREENS = {
   soudan: { title: '相談する',            sub: 'なんでも聞いてください' },
   judge:  { title: '録音を調べる',        sub: '通話のあとで詐欺かどうかを判定します' },
   help:   { title: 'だまされたかも',      sub: 'あわてない。上から順に、ひとつずつ' },
-  check:  { title: '弱点チェック',        sub: 'スマホとネットの使い方を見直します' }
+  check:  { title: '弱点チェック',        sub: 'スマホとネットの使い方を見直します' },
+  ayashii:{ title: 'これ、あやしい？',    sub: '番号・SMS・メール・リンクを、その場で見分けます' }
 };
 
 function showScreen(name) {
@@ -572,7 +638,12 @@ function showScreen(name) {
 function go(name) { location.hash = name; }
 
 function route() {
-  showScreen((location.hash || '').replace('#', ''));
+  // 「#ayashii?q=09012345678」のように、画面の名前のうしろに中身を付けて開けるようにする
+  // （#より後ろはサーバーに送られないので、番号や文章を渡しても外に出ない）
+  const h = (location.hash || '').replace('#', '');
+  const name = h.split(/[?&]/)[0];
+  showScreen(name);
+  if (name === 'ayashii') ayReceive(h);
 }
 window.addEventListener('hashchange', route);
 el('homeBtn').addEventListener('click', function () { location.hash = ''; showScreen('home'); });
@@ -822,10 +893,17 @@ function checkNumber() {
   if (entry) {
     setResultBox(box, '⚠️ 危険な番号として登録されています（' + sourceLabel(entry) + '・' + entry.date +
       '・危険度' + (entry.risk || '不明') + (entry.note ? '・' + entry.note : '') + '）', 'danger');
-  } else if (isSuspiciousInternational(number)) {
-    setResultBox(box, '⚠️ 登録はありませんが、「+1」などの海外番号はニセ警察官詐欺で多く使われるパターンです。注意してください', 'warn');
   } else {
-    setResultBox(box, '✅ この番号は登録されていません（記録がないだけで、安全とは限りません）', null);
+    const m = ayNumberMessage(number);
+    if (m && m.lv >= 3) {
+      setResultBox(box, '🚫 ' + m.text, 'danger');
+    } else if (m && m.lv === 2) {
+      setResultBox(box, '⚠️ ' + m.text, 'warn');
+    } else if (isSuspiciousInternational(number)) {
+      setResultBox(box, '⚠️ 登録はありませんが、「+1」などの海外番号はニセ警察官詐欺で多く使われるパターンです。注意してください', 'warn');
+    } else {
+      setResultBox(box, '✅ 登録はありません。' + (m ? m.text + ' ' : '') + '（記録がないだけで、安全とは限りません）', null);
+    }
   }
 }
 
@@ -836,10 +914,15 @@ function showNumberWarningIfAny() {
   if (entry) {
     setResultBox(warnEl, '⚠️ この番号は過去に危険と判定されています（' + sourceLabel(entry) + '・' + entry.date +
       '・危険度' + (entry.risk || '不明') + '）', 'danger');
-  } else if (isSuspiciousInternational(phoneEl.value)) {
-    setResultBox(warnEl, '⚠️ 「+1」などの海外番号は、ニセ警察官詐欺で多く使われています。注意してください', 'warn');
   } else {
-    warnEl.style.display = 'none';
+    const m = ayNumberMessage(phoneEl.value);
+    if (m && m.lv >= 2) {
+      setResultBox(warnEl, (m.lv >= 3 ? '🚫 ' : '⚠️ ') + m.text, m.lv >= 3 ? 'danger' : 'warn');
+    } else if (isSuspiciousInternational(phoneEl.value)) {
+      setResultBox(warnEl, '⚠️ 「+1」などの海外番号は、ニセ警察官詐欺で多く使われています。注意してください', 'warn');
+    } else {
+      warnEl.style.display = 'none';
+    }
   }
 }
 
@@ -1551,8 +1634,188 @@ el('saveBtn').addEventListener('click', function () {
   updateHomeStatus();
 });
 
+// ════════ これ、あやしい？（番号・SMS・メール・リンクをその場で見分ける）════════
+// 判定の部品は ayashii_engine.js。通信はせず、番号の大きなリストも使わない。
+// 詐欺に共通する「特徴」（番号の種類・ニセのリンクの作り・急がせる言い回し）で見分ける。
+const AY_HEAD = {
+  3: ['🚫 危険です', '詐欺の特徴がはっきり出ています。', 'danger'],
+  2: ['⚠️ 注意してください', '詐欺によくある特徴が含まれています。', 'warn'],
+  0: ['✅ 目立った怪しさは見つかりません', 'ただし安全を保証するものではありません。', '']
+};
+const AY_SAMPLES = [
+  ['国際電話', '+1 844 555 0199'],
+  ['宅配のSMS', '【ヤマト運輸】お荷物のお届けにあがりましたが不在の為持ち帰りました。ご確認ください。http://kuroneko-yamato.xyz/re'],
+  ['ニセ警察', '警視庁捜査二課の田中です。あなたの口座が資金洗浄に使われています。逮捕状が出ています。このことは誰にも言わないでください。LINEのビデオ通話で事情を聞きます。'],
+  ['証券会社のメール', '【重要】SBI証券　お客様の口座で不正なログインを検知しました。24時間以内に本人確認を完了してください。https://sbisec-co-jp.login-secure.top/auth'],
+  ['本物のリンク', 'https://www.amazon.co.jp/gp/css/order-history']
+];
+let ayLast = null;   // いま画面に出している判定
+
+function ayMk(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text != null) e.textContent = text;   // 入力された文字は必ず textContent で入れる（XSS対策）
+  return e;
+}
+
+// 「確認済み」と「自分で記録した番号」を、判定の部品に渡す形にそろえる
+function ayLists() {
+  const all = getCuratedDangerList().concat(getDangerList());
+  return { anshin: [], abunai: all.map(function (x) { return { num: x.number, name: x.note }; }) };
+}
+
+// 番号だけを手早く見たいとき用（「いま電話が来ている」「録音を調べる」から使う）
+function ayNumberMessage(number) {
+  if (!window.Ayashii || !String(number || '').trim()) return null;
+  const r = Ayashii.番号をしらべる(number, {});
+  const top = r.理由.slice().sort(function (a, b) { return b.lv - a.lv; })[0];
+  return top ? { lv: top.lv, text: top.what + '。' + top.why } : null;
+}
+
+function ayRenderSamples() {
+  const box = el('ay-samples');
+  box.innerHTML = '';
+  AY_SAMPLES.forEach(function (x) {
+    const b = ayMk('button', null, x[0]);
+    b.onclick = function () { el('ay-q').value = x[1]; ayRun(); };
+    box.appendChild(b);
+  });
+}
+
+function ayClear() { el('ay-q').value = ''; el('ay-result').innerHTML = ''; ayLast = null; el('ay-q').focus(); }
+
+function ayPaste() {
+  if (navigator.clipboard && navigator.clipboard.readText) {
+    navigator.clipboard.readText().then(function (t) { if (t) { el('ay-q').value = t; ayRun(); } },
+      function () { alert('貼り付けできませんでした。入力欄を長押しして「貼り付け」を選んでください。'); });
+  } else {
+    alert('入力欄を長押しして「貼り付け」を選んでください。');
+  }
+}
+
+// ほかのアプリ（例：MacroDroid）から、番号や文章を受け取る。 例： …/#ayashii?q=09012345678
+function ayReceive(hash) {
+  const m = hash.match(/[?&](?:q|tel|text)=([^&]*)/);
+  if (!m) return;
+  try { el('ay-q').value = decodeURIComponent(m[1]); ayRun(); } catch (e) { /* 壊れた文字は無視 */ }
+}
+
+function ayRun() {
+  const out = el('ay-result');
+  out.innerHTML = '';
+  ayLast = null;
+  const text = el('ay-q').value;
+  if (!text.trim()) return;
+  if (!window.Ayashii) {
+    out.appendChild(ayMk('div', 'result result-warn', '判定の部品を読み込めませんでした。電波のよい所でアプリを開き直してください。'));
+    out.lastChild.style.display = 'block';
+    return;
+  }
+  const r = Ayashii.しらべる(text, ayLists());
+  if (!r) return;
+  ayLast = r;
+  const head = AY_HEAD[r.判定];
+
+  const v = ayMk('div', 'ay-verdict' + (head[2] ? ' ' + head[2] : ''));
+  v.appendChild(ayMk('div', 'big', head[0]));
+  v.appendChild(ayMk('div', 'lead', head[1]));
+  out.appendChild(v);
+
+  const c1 = ayMk('div', 'card');
+  c1.appendChild(ayMk('div', 'label', '👉 どうすればいいか'));
+  const todo = ayMk('ul', 'ay-list ay-todo');
+  r.対処.forEach(function (t) { todo.appendChild(ayMk('li', null, t)); });
+  c1.appendChild(todo);
+  out.appendChild(c1);
+
+  if (r.理由.length) {
+    const c2 = ayMk('div', 'card');
+    c2.appendChild(ayMk('div', 'label', '🔎 そう判定した理由'));
+    const why = ayMk('ul', 'ay-list ay-why');
+    // 「怪しさなし」のときは、安心材料を先に見せる
+    const order = r.判定 === 0 ? r.理由.slice().sort(function (a, b) { return a.lv - b.lv; }) : r.理由;
+    order.forEach(function (x) {
+      const li = ayMk('li', 'r' + x.lv);
+      li.appendChild(ayMk('span', 'what', x.what));
+      if (x.src) { li.appendChild(document.createElement('br')); li.appendChild(ayMk('span', 'src', x.src)); }
+      li.appendChild(ayMk('span', 'why', x.why));
+      why.appendChild(li);
+    });
+    c2.appendChild(why);
+    out.appendChild(c2);
+  }
+
+  const c3 = ayMk('div', 'card ay-actions');
+  c3.appendChild(ayMk('div', 'label', '次にできること'));
+  if (r.判定 >= 2) {
+    const bh = ayMk('button', 'btn', '🚑 もう入力した・払ってしまった');
+    bh.style.background = '#e07b1a';
+    bh.onclick = function () { go('help'); };
+    c3.appendChild(bh);
+  }
+  const bs = ayMk('button', 'btn btn-judge', '💬 AIにくわしく相談する');
+  bs.onclick = aySoudan;
+  c3.appendChild(bs);
+  const bf = ayMk('button', 'btn btn-ghost', '📤 家族に相談する文をつくる');
+  bf.onclick = ayShare;
+  c3.appendChild(bf);
+  if (r.種類.length === 1 && r.種類[0] === '電話番号' && !findDangerEntry(text)) {
+    const br = ayMk('button', 'btn btn-ghost', '📵 この番号を「あやしい番号」として記録する');
+    br.onclick = ayRecord;
+    c3.appendChild(br);
+  }
+  c3.appendChild(ayMk('div', 'hint', '「AIにくわしく相談する」は、この文章を相談の画面に写します。送信を押すまで、どこにも送られません（相談にはAPIキーが必要です）。'));
+  out.appendChild(c3);
+
+  const c4 = ayMk('div', 'card');
+  c4.appendChild(ayMk('div', 'label', '📞 迷ったら相談'));
+  const a1 = ayMk('a', 'callbtn b2', '📞 #9110（警察の相談電話）'); a1.href = 'tel:%239110';
+  const a2 = ayMk('a', 'callbtn b3', '📞 188（消費者ホットライン）'); a2.href = 'tel:188';
+  c4.appendChild(a1); c4.appendChild(a2);
+  out.appendChild(c4);
+
+  v.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// 相談の画面に文章を写す（送るかどうかは、本人が「送信」を押して決める）
+function aySoudan() {
+  const text = el('ay-q').value.trim();
+  if (!text) return;
+  const found = ayLast ? ayLast.理由.slice(0, 4).map(function (x) { return '・' + x.what; }).join('\n') : '';
+  el('input').value = '次の連絡が届きました。詐欺でしょうか。どうすればいいですか。\n\n「' + text.slice(0, 1500) + '」'
+    + (found ? '\n\n（アプリの下調べで見つかった点）\n' + found : '');
+  go('soudan');
+  el('input').focus();
+}
+
+function ayShare() {
+  if (!ayLast) return;
+  const msg = '【くらしの安全相談AI「これ、あやしい？」で調べました】\n判定：' + AY_HEAD[ayLast.判定][0]
+    + '\n\n届いたもの：\n' + el('ay-q').value.trim().slice(0, 400)
+    + '\n\n理由：\n' + ayLast.理由.slice(0, 5).map(function (x) { return '・' + x.what; }).join('\n') + '\n\nどう思う？';
+  if (navigator.share) {
+    navigator.share({ text: msg }).catch(function () {});
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(msg).then(function () { alert('文章をコピーしました。LINEやメールに貼り付けて送れます。'); },
+      function () { prompt('この文章をコピーしてください', msg); });
+  } else {
+    prompt('この文章をコピーしてください', msg);
+  }
+}
+
+// 「いま電話が来ている」の画面にある、自分の記録に足す
+function ayRecord() {
+  const number = el('ay-q').value.trim();
+  if (!number) return;
+  el('add-number').value = number;
+  el('add-note').value = '「これ、あやしい？」で記録';
+  addDangerNumber();
+  ayRun();
+  alert('記録しました。次に同じ番号を調べると、警告が出ます（この端末の中だけに保存されます）。');
+}
+
 // スマホが古い版を掴んでいないか一目で分かるように、画面に版数を出しておく
-const APP_VERSION = 'v1.3（応急手当・弱点チェック）';
+const APP_VERSION = 'v1.4（これ、あやしい？）';
 
 // ご意見フォーム（Googleフォーム）の共有リンク。空のあいだはボタンを出さない。
 // ※公開してよいリンクなので、ここに直接書いてかまわない（秘密の情報ではない）。
@@ -1612,6 +1875,7 @@ window.addEventListener('load', function () {
   renderCuratedDangerList();
   renderHelpChoices();
   renderCheckQuestions();
+  ayRenderSamples();
   // いつ取ってきた情報かを画面に出す。自動更新が止まったとき日付が古いままになるので、
   // 「動いていない」ことに気づける。
   const newsUpdated = (typeof SCAM_NEWS_UPDATED !== 'undefined') ? SCAM_NEWS_UPDATED : '';
