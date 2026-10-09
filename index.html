@@ -66,6 +66,56 @@
   .bigbtn.call   { background: linear-gradient(135deg, #d0342c, #8c1c17); }
   .bigbtn.soudan { background: linear-gradient(135deg, #1d5fa8, #143a66); }
   .bigbtn.judge  { background: linear-gradient(135deg, #6a51a8, #3f2f6b); }
+  .bigbtn.help   { background: linear-gradient(135deg, #e07b1a, #a8500c); }
+  .bigbtn.check  { background: linear-gradient(135deg, #2e8b57, #1c5c39); }
+
+  /* ===== 応急手当（やってしまった） ===== */
+  .choice {
+    display: block; width: 100%; text-align: left;
+    background: #fff; border: 1px solid #dde4ee; border-radius: 12px;
+    padding: 14px; margin-bottom: 10px;
+    font-size: 16px; font-weight: bold; color: #223;
+    font-family: inherit; cursor: pointer;
+  }
+  .choice small { display: block; font-weight: normal; font-size: 12px; color: #6a7a90; margin-top: 4px; }
+  .choice:active { transform: scale(0.98); }
+  ol.steps { list-style: none; counter-reset: step; }
+  ol.steps li {
+    counter-increment: step; position: relative;
+    padding: 11px 0 11px 42px; font-size: 16px; line-height: 1.75;
+    border-bottom: 1px dashed #dde4ee;
+  }
+  ol.steps li:last-child { border-bottom: none; }
+  ol.steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 11px;
+    width: 30px; height: 30px; border-radius: 50%;
+    background: #e07b1a; color: #fff; font-weight: bold; font-size: 15px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .helptitle { font-size: 18px; font-weight: bold; color: #8c1c17; margin-bottom: 6px; line-height: 1.5; }
+
+  /* ===== 弱点チェック ===== */
+  .qbox { padding: 13px 0; border-bottom: 1px dashed #dde4ee; }
+  .qbox:last-child { border-bottom: none; }
+  .qtext { font-size: 15px; line-height: 1.7; margin-bottom: 9px; }
+  .ans { display: flex; gap: 6px; }
+  .ans button {
+    flex: 1; min-width: 0; border: 1px solid #c8d4e4; background: #fff; color: #445;
+    border-radius: 10px; padding: 10px 2px; font-size: 13px;
+    font-family: inherit; cursor: pointer;
+  }
+  .ans button.on { color: #fff; font-weight: bold; border-color: transparent; }
+  .ans button.on.ok  { background: #2e7d32; }
+  .ans button.on.no  { background: #d0342c; }
+  .ans button.on.unk { background: #7a879a; }
+  .fixitem {
+    border-left: 4px solid #d0342c; background: #fdf5f4;
+    border-radius: 0 10px 10px 0; padding: 10px 12px; margin-top: 10px;
+    font-size: 14px; line-height: 1.75;
+  }
+  .fixitem.unk { border-left-color: #f0a500; background: #fff9ec; }
+  .fixitem b { display: block; margin-bottom: 4px; }
+  .sumline { font-size: 17px; font-weight: bold; margin-bottom: 4px; }
 
   .homenote {
     background: #fff; border: 1px solid #dde4ee; border-radius: 12px;
@@ -249,6 +299,10 @@
       <span class="t">📞 いま電話が来ている</span>
       <span class="d">通話しながら見る画面です。設定なしですぐ使えます。あやしい番号かどうかも調べられます。</span>
     </button>
+    <button class="bigbtn help" onclick="go('help')">
+      <span class="t">🚑 だまされたかも・やってしまった</span>
+      <span class="d">カード番号を入れた、お金を振り込んだ、あやしいアプリを入れた…。いますぐやることを順番に出します。設定なしで使えます。</span>
+    </button>
     <button class="bigbtn soudan" onclick="go('soudan')">
       <span class="t">💬 相談したい</span>
       <span class="d">詐欺・防犯から、ご近所トラブルや暮らしの困りごとまで。あやしいメール・SMS・ハガキは📷写真を見せて聞けます。</span>
@@ -256,6 +310,10 @@
     <button class="bigbtn judge" onclick="go('judge')">
       <span class="t">🎧 通話の録音を調べる</span>
       <span class="d">電話が終わったあとに、録音を文字にして詐欺かどうかを判定します。</span>
+    </button>
+    <button class="bigbtn check" onclick="go('check')">
+      <span class="t">🔍 スマホとネットの弱点チェック</span>
+      <span class="d">11の質問に答えると、あなたの弱いところと直し方が分かります。約2分・設定なしで使えます。</span>
     </button>
 
     <div class="homenote">
@@ -375,6 +433,70 @@
   </div></div>
 </div>
 
+<!-- ══════════ だまされたかも・やってしまった（応急手当） ══════════ -->
+<div class="screen" id="screen-help">
+  <div class="scroll"><div class="inner">
+    <div id="help-list">
+      <div class="homenote" style="margin-bottom:14px;">
+        <b>何をしてしまいましたか？</b> 近いものを選んでください。<br>
+        いま相手が目の前にいる・電話がつながっているときは、先に<b>110番</b>へ。
+      </div>
+      <div id="help-choices"></div>
+    </div>
+
+    <div id="help-detail" style="display:none;">
+      <button class="btn btn-ghost" onclick="closeHelp()" style="margin-bottom:12px;">← ほかの場面を選ぶ</button>
+      <div class="card">
+        <div class="label">🚑 いますぐやること（上から順に）</div>
+        <div class="helptitle" id="help-title"></div>
+        <ol class="steps" id="help-steps"></ol>
+        <div class="hint" id="help-note" style="display:none;"></div>
+      </div>
+      <div class="card">
+        <div class="label">📞 電話する</div>
+        <a class="callbtn" href="tel:110">📞 110（いま被害が起きている・犯人が近くにいる）</a>
+        <a class="callbtn b2" href="tel:%239110">📞 #9110（警察の相談電話）</a>
+        <a class="callbtn b3" href="tel:188">📞 188（消費者ホットライン）</a>
+        <div class="hint">
+          ネットの被害は、お住まいの都道府県警察の
+          <a href="https://www.npa.go.jp/bureau/cyber/soudan.html" target="_blank" rel="noopener">サイバー犯罪相談窓口</a>
+          にも相談できます。
+        </div>
+      </div>
+      <div class="homenote">
+        <b>だまされたのは、あなたのせいではありません。</b>相手はだますことを仕事にしています。早く動くほど、被害は小さくできます。<br><br>
+        <b>⚠️「お金を取り戻します」という電話・広告・SNSに注意。</b>被害にあった人をもう一度だます手口があります。相談先は警察か188にしてください。
+        <a class="callbtn b3" href="#soudan" style="margin-top:12px;">💬 AIにくわしく相談する</a>
+      </div>
+    </div>
+  </div></div>
+</div>
+
+<!-- ══════════ スマホとネットの弱点チェック ══════════ -->
+<div class="screen" id="screen-check">
+  <div class="scroll"><div class="inner">
+    <div class="homenote" style="margin-bottom:14px;">
+      <b>ふだんの使い方を、3つのボタンで答えてください。</b><br>
+      答えはこのスマホの中にだけ残り、どこにも送られません。「わからない」も大事な答えです。
+    </div>
+    <div class="card">
+      <div class="label">🔍 11の質問</div>
+      <div id="check-questions"></div>
+      <div class="row" style="margin-top:14px;">
+        <button class="btn btn-main" onclick="showCheckResult(true)">📋 結果を見る</button>
+        <button class="btn btn-ghost" onclick="resetCheck()">答えを消す</button>
+      </div>
+    </div>
+    <div class="card" id="check-result-card" style="display:none;">
+      <div class="label">📋 あなたの結果</div>
+      <div id="check-summary"></div>
+      <div class="hint" style="margin-top:14px;">
+        ※ この結果は、上の11の質問についてだけのものです。スマホの中を調べたわけではなく、安全を保証するものではありません。
+      </div>
+    </div>
+  </div></div>
+</div>
+
 <!-- ══════════ 設定 ══════════ -->
 <div id="settingsModal">
   <div class="modalBox">
@@ -431,7 +553,9 @@ const SCREENS = {
   home:   { title: 'くらしの安全相談AI', sub: '詐欺・防犯・暮らしの困りごとに' },
   call:   { title: 'いま電話が来ている',  sub: 'あわてない。お金の話が出たら、いったん切る' },
   soudan: { title: '相談する',            sub: 'なんでも聞いてください' },
-  judge:  { title: '録音を調べる',        sub: '通話のあとで詐欺かどうかを判定します' }
+  judge:  { title: '録音を調べる',        sub: '通話のあとで詐欺かどうかを判定します' },
+  help:   { title: 'だまされたかも',      sub: 'あわてない。上から順に、ひとつずつ' },
+  check:  { title: '弱点チェック',        sub: 'スマホとネットの使い方を見直します' }
 };
 
 function showScreen(name) {
@@ -1131,6 +1255,287 @@ document.querySelectorAll('#quick button').forEach(function (btn) {
   btn.addEventListener('click', function () { send(btn.textContent); });
 });
 
+// ════════ だまされたかも・やってしまった（応急手当）════════
+// 被害にあった直後に「まず何をするか」を順番に出す。AIもネットも使わないので、
+// キーなし・電波が弱い場所でも開ける。
+const HELP_CASES = [
+  {
+    title: 'カード番号を入れてしまった',
+    sub: '偽のサイト・SMSやメールのリンク先など',
+    steps: [
+      'カード会社に電話して、カードを止めてもらう。電話番号はカードの裏に書いてあります。夜や休日でも受け付けている会社がほとんどです。',
+      '「偽のサイトにカード番号を入れてしまった」と伝え、新しい番号のカードに作り直してもらう。',
+      '利用明細を見て、身に覚えのない請求があればカード会社に伝える。届け出が遅いと補償されないことがあるので、早めに。',
+      '同じ画面でIDやパスワードも入れたなら、本物のサイトを自分で開いてパスワードを変える。',
+      '届いたSMS・メール・サイトの画面を、消さずに残す（スクリーンショット）。',
+      '警察の相談電話（#9110）に知らせる。'
+    ]
+  },
+  {
+    title: 'お金を振り込んでしまった',
+    sub: 'ATM・ネットバンキング・窓口から',
+    steps: [
+      '自分の銀行に電話して「詐欺にあった。振込を止めたい。相手の口座を止めてほしい」と伝える。1分でも早く。',
+      '警察に届け出る。振り込んだ直後なら110番、時間がたっていれば#9110か近くの警察署へ。',
+      '振込の控え（明細・画面）、相手の電話番号、やりとりの記録を、消さずに残す。',
+      '相手の口座が止まり、お金が残っていれば、戻ってくる場合があります。手続きは銀行に聞いてください。',
+      '「追加で払えば戻る」「手数料が必要」と言われても、もう払わない。相手からの電話には出ない。'
+    ]
+  },
+  {
+    title: '電子マネーを買って、番号を教えてしまった',
+    sub: 'コンビニで買うギフトカード・プリペイドカード',
+    steps: [
+      'まだ番号を教えていないなら、教えない。カードは使わずに持っておく。',
+      'カードの発行会社に連絡して「詐欺で番号を教えてしまった」と伝える。連絡先はカードの裏や公式サイトにあります。相手がまだ使っていなければ、止められることがあります。',
+      'カード本体とレシートは捨てない。',
+      '警察の相談電話（#9110）と、消費者ホットライン（188）に相談する。',
+      '「もう1枚買って」と言われても、もう買わない。相手からの電話には出ない。'
+    ]
+  },
+  {
+    title: 'キャッシュカードを渡した・暗証番号を教えた',
+    sub: '「警察官」「銀行員」「役所の人」を名乗る相手に',
+    steps: [
+      '銀行に電話して、口座とカードを止めてもらう。夜や休日でも、紛失・盗難の窓口が受け付けています。',
+      '110番する。カードを受け取ってすぐ引き出すのが、この手口です。',
+      '通帳や明細で、お金が引き出されていないか確かめる。',
+      '銀行に被害を届け出る。早く届け出れば、補償を受けられる場合があります。',
+      '同じ暗証番号をほかのカードでも使っていたら、そちらも変える。'
+    ]
+  },
+  {
+    title: 'IDやパスワードを入れてしまった',
+    sub: '偽のログイン画面（銀行・通販・携帯会社・宅配など）',
+    steps: [
+      '本物のサイトや公式アプリを自分で開き（届いたリンクは使わない）、パスワードを変える。',
+      '同じパスワードを使っているほかのサービスも、すべて変える。',
+      '二段階認証（パスワードに加えて、スマホに届く番号などでもう一度確かめる仕組み）をオンにする。',
+      '登録してあるメールアドレス・電話番号・住所が書きかえられていないか、ログインの記録に知らない端末がないかを見る。',
+      '銀行・証券・カードのIDだった場合は、その会社にも電話で知らせる。',
+      'もうログインできなくなっていたら、その会社の窓口に「乗っ取られた」と連絡する。'
+    ]
+  },
+  {
+    title: '「ウイルス感染」の警告が出て、電話してしまった',
+    sub: 'パソコンやスマホの画面に出た番号にかけた・遠隔操作された',
+    steps: [
+      '警告の画面は偽物です。電話を切る。相手からかかってきても出ない。',
+      '相手に言われて遠隔操作のアプリを入れたなら、まずネットを切る（Wi-Fiをオフにする・LANケーブルを抜く）。',
+      '入れたアプリを削除（アンインストール）する。',
+      'お金を払った・電子マネーを買ったなら、カード会社や発行会社に連絡する。',
+      '遠隔操作されているあいだに使ったネットバンキングやメールのパスワードを、別のスマホやパソコンから変える。',
+      '警察の相談電話（#9110）や消費者ホットライン（188）に相談する。'
+    ],
+    note: '警告の画面が出ただけで、電話もせずアプリも入れていなければ、ブラウザを閉じる（消えなければ再起動する）だけでかまいません。'
+  },
+  {
+    title: 'あやしいアプリを入れてしまった',
+    sub: 'SMSのリンクから入れた「宅配」「セキュリティ」のアプリなど',
+    steps: [
+      '機内モードにして、通信を切る。',
+      '入れたアプリを削除（アンインストール）する。',
+      '別のスマホやパソコンから、GoogleアカウントやApple IDなど大事なパスワードを変える。',
+      '携帯会社に連絡して、身に覚えのない支払い（携帯料金とまとめて払う決済）がないか、自分の番号から勝手にSMSが送られていないかを確かめる。',
+      'アプリが消せない・動きがおかしいときは、携帯ショップに持っていく。',
+      '警察の相談電話（#9110）に知らせる。'
+    ]
+  },
+  {
+    title: '名前・住所・身分証の写真などを送ってしまった',
+    sub: '個人情報を教えた・入力した',
+    steps: [
+      '何を渡したか、紙に書き出す（名前・住所・生年月日・電話番号・口座・身分証の写真など）。',
+      '口座番号・暗証番号・カード番号も伝えたなら、銀行やカード会社に連絡する。',
+      'これから先、あなたの名前や住所を知っている電話・SMS・郵便が来ても信用しない。「あなたの情報が漏れています。消してあげます」という電話は詐欺です。',
+      '身に覚えのない請求書や契約の知らせが届いたら、払わずに消費者ホットライン（188）へ。',
+      '身分証の写真を送った場合は、警察の相談電話（#9110）に相談する。'
+    ]
+  }
+];
+
+function renderHelpChoices() {
+  const box = el('help-choices');
+  box.innerHTML = '';
+  HELP_CASES.forEach(function (c, i) {
+    const btn = document.createElement('button');
+    btn.className = 'choice';
+    btn.textContent = c.title;
+    const sub = document.createElement('small');
+    sub.textContent = c.sub;
+    btn.appendChild(sub);
+    btn.onclick = function () { openHelp(i); };
+    box.appendChild(btn);
+  });
+}
+
+function openHelp(i) {
+  const c = HELP_CASES[i];
+  if (!c) return;
+  el('help-title').textContent = c.title;
+  const ol = el('help-steps');
+  ol.innerHTML = '';
+  c.steps.forEach(function (s) {
+    const li = document.createElement('li');
+    li.textContent = s;
+    ol.appendChild(li);
+  });
+  const note = el('help-note');
+  note.textContent = c.note ? '💡 ' + c.note : '';
+  note.style.display = c.note ? 'block' : 'none';
+  el('help-list').style.display = 'none';
+  el('help-detail').style.display = 'block';
+  document.querySelector('#screen-help .scroll').scrollTop = 0;
+}
+
+function closeHelp() {
+  el('help-detail').style.display = 'none';
+  el('help-list').style.display = 'block';
+  document.querySelector('#screen-help .scroll').scrollTop = 0;
+}
+
+// ════════ スマホとネットの弱点チェック ════════
+// スマホの中を調べるのではなく、ふだんの使い方を質問して弱いところを見つける。
+// w は「放っておいたときの危なさ」。大きいものから先に結果へ出す。
+const CHECK_STORAGE = 'kurashi_check_answers';
+const CHECK_ITEMS = [
+  { id: 'reuse', w: 5,
+    q: '銀行・メール・LINEなど大事なサービスで、同じパスワードを使い回していない',
+    fix: '1つ漏れると、ほかも全部入られてしまいます。まずメール（Gmailなど）と銀行だけでも、ほかと違うパスワードに変えましょう。覚えきれない分は、紙に書いて家の中にしまっておいてかまいません。' },
+  { id: '2fa', w: 5,
+    q: 'メール（Gmailなど）と銀行・証券に、二段階認証をつけている',
+    fix: '二段階認証は、パスワードに加えて、スマホに届く番号などでもう一度確かめる仕組みです。パスワードが漏れても入られにくくなります。各サービスの「設定」→「セキュリティ」から、メールと銀行を先につけましょう。' },
+  { id: 'link', w: 5,
+    q: 'SMSやメールのリンクからは、ログインやカード番号の入力をしない',
+    fix: '偽サイトの入口は、ほとんどがSMSやメールのリンクです。銀行・通販・宅配は、いつも使っている公式アプリか、自分で登録したお気に入り（ブックマーク）から開く、と決めておきましょう。' },
+  { id: 'family', w: 4,
+    q: 'お金の話（振込・投資・電子マネー）が出たら家族に相談する、と家族で決めてある',
+    fix: '詐欺は「誰にも言わないで」と一人にさせる手口です。「お金の話が出たら、まず電話する」と家族で約束し、家族だけが知る合言葉を1つ決めておきましょう。' },
+  { id: 'store', w: 4,
+    q: 'アプリは公式のストア（Google Play／App Store）からしか入れていない',
+    fix: 'SMSやサイトの「このアプリを入れてください」は、ほぼ偽物です。アプリは必ずストアで名前を探して入れましょう。心当たりのないアプリは削除を。' },
+  { id: 'update', w: 3,
+    q: 'スマホの更新（システムアップデート）の知らせが来たら、後回しにせず入れている',
+    fix: '更新は、見つかった弱点をふさぐ修理です。「設定」→「システム」→「ソフトウェアの更新」を開き、たまっていたら充電しながらWi-Fiで入れましょう。更新がもう来ない古い機種は、買いかえの目安です。' },
+  { id: 'lock', w: 3,
+    q: 'スマホに画面ロック（暗証番号・指紋・顔）をかけている',
+    fix: '落としたとき・盗まれたときに、中身と決済アプリを守る最後のカギです。「設定」→「セキュリティ」→「画面ロック」からかけましょう。誕生日や1234は避けてください。' },
+  { id: 'notify', w: 3,
+    q: 'カードや銀行を使ったら、メールやアプリで知らせが来るようにしている',
+    fix: '知らせが来れば、勝手に使われたその日に気づけます。カード会社・銀行のアプリや会員ページの「利用通知」をオンにしましょう。' },
+  { id: 'phone', w: 3,
+    q: '知らない番号・非通知・「+」で始まる国際電話には出ない（留守番電話で受けている）',
+    fix: 'いつも留守番電話にしておき、名前と用件を聞いてからかけ直すのが安全です。固定電話は「国際電話不取扱受付センター」に申し込むと、国際電話を無料で止められます。' },
+  { id: 'router', w: 3,
+    q: '家のWi-Fiの親機（ルーター）の管理用パスワードを、買ったときのままにしていない',
+    fix: '買ったときのパスワードは、機種ごとに知られていることがあります。説明書を見て管理画面を開き、パスワードを変え、本体の更新（ファームウェア更新）を自動にしましょう。むずかしければ家族や買った店に頼んでかまいません。' },
+  { id: 'old', w: 2,
+    q: '使わなくなった古いスマホ・ネットにつながるカメラなどを、つないだまま放っていない',
+    fix: '更新されない古い機器は、家のネットの入口になることがあります。使っていないものは電源を切るか、Wi-Fiの登録を消しましょう。' }
+];
+
+const CHECK_LABELS = [
+  { v: 'ok',  t: 'できている' },
+  { v: 'no',  t: 'できていない' },
+  { v: 'unk', t: 'わからない' }
+];
+
+function getCheckAnswers() {
+  try { return JSON.parse(localStorage.getItem(CHECK_STORAGE) || '{}') || {}; } catch (e) { return {}; }
+}
+
+function renderCheckQuestions() {
+  const answers = getCheckAnswers();
+  const box = el('check-questions');
+  box.innerHTML = '';
+  CHECK_ITEMS.forEach(function (item, i) {
+    const q = document.createElement('div');
+    q.className = 'qbox';
+    const t = document.createElement('div');
+    t.className = 'qtext';
+    t.textContent = (i + 1) + '．' + item.q;
+    q.appendChild(t);
+    const row = document.createElement('div');
+    row.className = 'ans';
+    CHECK_LABELS.forEach(function (lb) {
+      const b = document.createElement('button');
+      b.textContent = lb.t;
+      if (answers[item.id] === lb.v) b.className = 'on ' + lb.v;
+      b.onclick = function () { setCheckAnswer(item.id, lb.v); };
+      row.appendChild(b);
+    });
+    q.appendChild(row);
+    box.appendChild(q);
+  });
+}
+
+function setCheckAnswer(id, value) {
+  const answers = getCheckAnswers();
+  answers[id] = value;
+  localStorage.setItem(CHECK_STORAGE, JSON.stringify(answers));
+  renderCheckQuestions();
+  // すでに結果を出しているときは、答えを変えたらその場で結果も直す
+  if (el('check-result-card').style.display !== 'none') showCheckResult(false);
+}
+
+function resetCheck() {
+  localStorage.removeItem(CHECK_STORAGE);
+  renderCheckQuestions();
+  el('check-result-card').style.display = 'none';
+}
+
+function addFixItem(box, item, cls, mark) {
+  const d = document.createElement('div');
+  d.className = 'fixitem' + (cls ? ' ' + cls : '');
+  const b = document.createElement('b');
+  b.textContent = mark + ' ' + item.q;
+  d.appendChild(b);
+  d.appendChild(document.createTextNode(item.fix));
+  box.appendChild(d);
+}
+
+function showCheckResult(scroll) {
+  const answers = getCheckAnswers();
+  const byWeight = function (a, b) { return b.w - a.w; };
+  const weak = CHECK_ITEMS.filter(function (x) { return answers[x.id] === 'no'; }).sort(byWeight);
+  // 答えていない質問は「わからない」と同じ扱いにする
+  const unknown = CHECK_ITEMS.filter(function (x) { return answers[x.id] !== 'no' && answers[x.id] !== 'ok'; }).sort(byWeight);
+  const okCount = CHECK_ITEMS.length - weak.length - unknown.length;
+
+  const box = el('check-summary');
+  box.innerHTML = '';
+  const line = document.createElement('div');
+  line.className = 'sumline';
+  if (weak.length) {
+    line.textContent = '⚠️ 直したほうがいい点：' + weak.length + 'つ';
+  } else if (unknown.length) {
+    line.textContent = '🤔 確かめたい点：' + unknown.length + 'つ';
+  } else {
+    line.textContent = '✅ 今回の質問の中では、弱点は見つかりませんでした';
+  }
+  box.appendChild(line);
+  const sub = document.createElement('div');
+  sub.className = 'hint';
+  sub.style.marginTop = '0';
+  sub.textContent = 'できている ' + okCount + '　／　できていない ' + weak.length + '　／　わからない ' + unknown.length +
+    (weak.length ? '　（危ない順に並べています。上の1つからで大丈夫です）' : '');
+  box.appendChild(sub);
+
+  weak.forEach(function (item) { addFixItem(box, item, '', '⚠️'); });
+  if (unknown.length) {
+    const h = document.createElement('div');
+    h.className = 'hint';
+    h.style.marginTop = '16px';
+    h.textContent = '🤔 わからなかった点（家族や買った店と一緒に確かめましょう）';
+    box.appendChild(h);
+    unknown.forEach(function (item) { addFixItem(box, item, 'unk', '🤔'); });
+  }
+
+  const card = el('check-result-card');
+  card.style.display = 'block';
+  if (scroll) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
 // ════════ 設定 ════════
 const modal = el('settingsModal');
 function openSettings() {
@@ -1147,7 +1552,7 @@ el('saveBtn').addEventListener('click', function () {
 });
 
 // スマホが古い版を掴んでいないか一目で分かるように、画面に版数を出しておく
-const APP_VERSION = 'v1.2（ご意見ボタン）';
+const APP_VERSION = 'v1.3（応急手当・弱点チェック）';
 
 // ご意見フォーム（Googleフォーム）の共有リンク。空のあいだはボタンを出さない。
 // ※公開してよいリンクなので、ここに直接書いてかまわない（秘密の情報ではない）。
@@ -1159,7 +1564,7 @@ if (FEEDBACK_URL) {
 
 function updateHomeStatus() {
   const n = (typeof KNOWLEDGE !== 'undefined') ? KNOWLEDGE.length : 0;
-  el('homeStatus').textContent = (getKey() ? '✅ APIキー設定済み' : '⚙️ APIキー未設定（「相談」と「録音を調べる」に必要です）') +
+  el('homeStatus').textContent = (getKey() ? '✅ APIキー設定済み' : '⚙️ APIキー未設定（「相談」と「録音を調べる」にだけ必要です）') +
     '　／　防犯・暮らしの知識 ' + n + '件　／　' + APP_VERSION;
 }
 
@@ -1205,6 +1610,8 @@ if ('serviceWorker' in navigator) {
 window.addEventListener('load', function () {
   renderDangerList();
   renderCuratedDangerList();
+  renderHelpChoices();
+  renderCheckQuestions();
   // いつ取ってきた情報かを画面に出す。自動更新が止まったとき日付が古いままになるので、
   // 「動いていない」ことに気づける。
   const newsUpdated = (typeof SCAM_NEWS_UPDATED !== 'undefined') ? SCAM_NEWS_UPDATED : '';
