@@ -355,6 +355,10 @@
 <!-- ══════════ ホーム ══════════ -->
 <div class="screen active" id="screen-home">
   <div class="scroll"><div class="inner">
+    <button class="bigbtn check" onclick="go('check')">
+      <span class="t">🛡️ サイバーセキュリティ対策（弱点チェック）</span>
+      <span class="d">パスワードの漏れと家のWi-Fiの古さを調べ、14の質問であなたの弱いところと直し方を出します。約3分・設定なしで使えます。<span id="check-due-home"></span></span>
+    </button>
     <button class="bigbtn call" onclick="go('call')">
       <span class="t">📞 いま電話が来ている</span>
       <span class="d">通話しながら見る画面です。設定なしですぐ使えます。あやしい番号かどうかも調べられます。</span>
@@ -374,10 +378,6 @@
     <button class="bigbtn judge" onclick="go('judge')">
       <span class="t">🎧 通話の録音を調べる</span>
       <span class="d">電話が終わったあとに、録音を文字にして詐欺かどうかを判定します。</span>
-    </button>
-    <button class="bigbtn check" onclick="go('check')">
-      <span class="t">🛡️ サイバーセキュリティ対策（弱点チェック）</span>
-      <span class="d">パスワードの漏れと家のWi-Fiの古さを調べ、14の質問であなたの弱いところと直し方を出します。約3分・設定なしで使えます。<span id="check-due-home"></span></span>
     </button>
 
     <div class="homenote">
@@ -2466,7 +2466,7 @@ function ayRecord() {
 }
 
 // スマホが古い版を掴んでいないか一目で分かるように、画面に版数を出しておく
-const APP_VERSION = 'v1.5（サイバーセキュリティ対策）';
+const APP_VERSION = 'v1.5.1（サイバーセキュリティ対策）';
 
 // ご意見フォーム（Googleフォーム）の共有リンク。空のあいだはボタンを出さない。
 // ※公開してよいリンクなので、ここに直接書いてかまわない（秘密の情報ではない）。
