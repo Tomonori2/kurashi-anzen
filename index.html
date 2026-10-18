@@ -214,6 +214,14 @@
   }
   .card .label { font-size: 12px; color: #6a7a90; letter-spacing: 1px; margin-bottom: 10px; font-weight: bold; }
   .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  /* セキュリティ画面の目次 */
+  .toc { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .toc button {
+    border: 1px solid #c8d4e4; background: #f3f6fa; color: #143a66; border-radius: 10px;
+    padding: 10px 8px; font-size: 14px; font-weight: bold; text-align: left; cursor: pointer;
+  }
+  .toc button:active { transform: scale(0.97); }
+  #screen-check .card[id] { scroll-margin-top: 8px; }
   .btn {
     border: none; border-radius: 11px; color: #fff;
     padding: 11px 18px; font-size: 15px; font-weight: bold; cursor: pointer;
@@ -357,7 +365,7 @@
   <div class="scroll"><div class="inner">
     <button class="bigbtn check" onclick="go('check')">
       <span class="t">🛡️ サイバーセキュリティ対策（弱点チェック）</span>
-      <span class="d">パスワードの漏れと家のWi-Fiの古さを調べ、14の質問であなたの弱いところと直し方を出します。約3分・設定なしで使えます。<span id="check-due-home"></span></span>
+      <span class="d">パスワードの漏れ・スマホ・家のWi-Fi・パソコン・LINEの守り方を、ひとつずつ確かめます。14の質問で、あなたの弱いところと直し方も出します。設定なしで使えます。<span id="check-due-home"></span></span>
     </button>
     <button class="bigbtn call" onclick="go('call')">
       <span class="t">📞 いま電話が来ている</span>
@@ -561,6 +569,22 @@
 <div class="screen" id="screen-check">
   <div class="scroll"><div class="inner">
     <div class="card">
+      <div class="label">📖 目次（押すとその場所へ飛びます）</div>
+      <div class="toc">
+        <button onclick="goSec('sec-pw')">🔑 パスワード漏れ</button>
+        <button onclick="goSec('sec-gen')">🎲 パスワード作り</button>
+        <button onclick="goSec('sec-phone')">📱 スマホの検査</button>
+        <button onclick="goSec('sec-q')">🔍 14の質問</button>
+        <button onclick="goSec('sec-router')">📶 家のWi-Fi</button>
+        <button onclick="goSec('sec-pc')">💻 パソコン</button>
+        <button onclick="goSec('sec-free')">☕ 外のWi-Fi</button>
+        <button onclick="goSec('sec-line')">💬 LINE</button>
+        <button onclick="goSec('sec-official')">🔗 公式の点検</button>
+        <button onclick="goSec('sec-monthly')">📅 月1回の点検</button>
+      </div>
+    </div>
+
+    <div class="card" id="sec-pw">
       <div class="label">🔑 パスワード漏れ調べ</div>
       <div style="font-size:14px; line-height:1.75;">
         いま使っているパスワードが、過去にどこかの会社から漏れたものの中に入っていないかを調べます。
@@ -588,7 +612,7 @@
       </details>
     </div>
 
-    <div class="card">
+    <div class="card" id="sec-gen">
       <div class="label">🎲 強いパスワードを作る</div>
       <div style="font-size:14px; line-height:1.75;">
         このスマホの中だけで作ります。通信はせず、どこにも残しません。作ったものは紙に書いて家の中にしまうか、スマホの「パスワードを保存」に覚えさせてください。
@@ -611,7 +635,7 @@
       </div>
     </div>
 
-    <div class="card">
+    <div class="card" id="sec-phone">
       <div class="label">📱 このスマホの検査</div>
       <div style="font-size:14px; line-height:1.75;">
         スマホの本体（Android）とブラウザが古くなっていないかを調べます。古いままだと、見つかっている弱点がふさがれていません。
@@ -649,7 +673,7 @@
       <b>ふだんの使い方を、3つのボタンで答えてください。</b><br>
       答えはこのスマホの中にだけ残り、どこにも送られません。「わからない」も大事な答えです。
     </div>
-    <div class="card">
+    <div class="card" id="sec-q">
       <div class="label">🔍 14の質問</div>
       <div id="check-questions"></div>
       <div class="row" style="margin-top:14px;">
@@ -665,7 +689,7 @@
       </div>
     </div>
 
-    <div class="card">
+    <div class="card" id="sec-router">
       <div class="label">📶 家のWi-Fiの親機（ルーター）は古くない？</div>
       <div style="font-size:14px; line-height:1.75;">
         古い親機は、メーカーの更新（弱点の修理）が止まっていて、家のネットの入口になることがあります。3つの質問で確かめます。
@@ -705,7 +729,7 @@
       </div>
     </div>
 
-    <div class="card">
+    <div class="card" id="sec-pc">
       <div class="label">💻 パソコンの対策</div>
       <div style="font-size:14px; line-height:1.75;">
         パソコンも、スマホと同じく「更新」と「ウイルス対策」の2つが基本です。そして、パソコンで多いのが<b>ニセの警告画面（サポート詐欺）</b>です。
@@ -735,7 +759,7 @@
       </details>
     </div>
 
-    <div class="card">
+    <div class="card" id="sec-free">
       <div class="label">☕ 外のフリーWi-Fi（お店・駅・ホテル）</div>
       <div style="font-size:14px; line-height:1.75;">
         無料のWi-Fiは便利ですが、通信をのぞかれたり、お店の名前をまねたニセのWi-Fiにつながったりすることがあります。
@@ -748,7 +772,7 @@
       </ul>
     </div>
 
-    <div class="card">
+    <div class="card" id="sec-line">
       <div class="label">💬 LINEの乗っ取りを防ぐ</div>
       <div style="font-size:14px; line-height:1.75;">
         友だちのLINEから「電話番号を教えて」「届いた番号（認証番号）を教えて」と来るのは、<b>乗っ取りの手口</b>です。教えると、あなたのLINEも乗っ取られます。
@@ -765,7 +789,7 @@
       </div>
     </div>
 
-    <div class="card">
+    <div class="card" id="sec-official">
       <div class="label">🔗 公式の点検ページ（本物の記録で確かめる）</div>
       <div style="font-size:14px; line-height:1.75;">
         知らない端末からログインされていないか、漏れたパスワードが無いかは、サービスの会社自身がいちばん正確に知っています。下のボタンから公式のページを開いて確かめましょう。
@@ -786,7 +810,7 @@
       </div>
     </div>
 
-    <div class="card">
+    <div class="card" id="sec-monthly">
       <div class="label">📅 月に1回、点検しましょう</div>
       <div style="font-size:14px; line-height:1.75;" id="check-due"></div>
       <div class="hint" style="margin-top:6px;">
@@ -2145,6 +2169,12 @@ function downloadIcs() {
   setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
 }
 
+// セキュリティ画面の目次：押したカードまで動かす
+function goSec(id) {
+  const c = el(id);
+  if (c) c.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
 // ════════ 家のWi-Fiの親機（ルーター）の古さ ════════
 // 機種の一覧は持たない（すぐ古くなり、間違った答えを出すため）。
 // 年数・暗号の種類・自動更新の3つで目安を出し、機種ごとの確認はメーカー公式サイトの検索に任せる。
@@ -2547,7 +2577,7 @@ function ayRecord() {
 }
 
 // スマホが古い版を掴んでいないか一目で分かるように、画面に版数を出しておく
-const APP_VERSION = 'v1.6（パソコン・フリーWi-Fi・LINE・iPhoneの対策）';
+const APP_VERSION = 'v1.6.1（セキュリティ画面に目次）';
 
 // ご意見フォーム（Googleフォーム）の共有リンク。空のあいだはボタンを出さない。
 // ※公開してよいリンクなので、ここに直接書いてかまわない（秘密の情報ではない）。
