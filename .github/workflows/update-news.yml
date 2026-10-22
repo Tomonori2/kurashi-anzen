@@ -1,9 +1,11 @@
 # 警察庁の詐欺注意喚起を毎朝取ってきて、news_data.js を自動で更新する。
+# あわせて IPA の緊急対策情報も取ってきて、security_alerts.js を更新する。
 # GitHub上で勝手に動く仕組み（GitHub Actions）。無料。
 #
 # ・毎日 朝6時（日本時間）ごろに動く。GitHubの都合で数十分ずれることがある。
 # ・「Actions」タブの「Run workflow」から手動でも動かせる。
-# ・取得に失敗した日は news_data.js を書き換えず、赤い×で終わる（メールで気づける）。
+# ・取得に失敗した日はそのファイルを書き換えず、赤い×で終わる（メールで気づける）。
+#   片方が失敗しても、もう片方は更新してコミットする（!cancelled() の行）。
 name: 警察庁の詐欺注意喚起を毎朝更新
 
 on:
@@ -29,14 +31,19 @@ jobs:
       - name: 警察庁から取得して news_data.js を更新
         run: python fetch_scam_news.py
 
+      - name: IPAから取得して security_alerts.js を更新
+        if: ${{ !cancelled() }}
+        run: python fetch_ipa_alerts.py
+
       - name: 中身が変わっていたらコミットして反映
+        if: ${{ !cancelled() }}
         run: |
-          if [ -z "$(git status --porcelain news_data.js)" ]; then
-            echo "変更なし（警察庁の新しい注意喚起はありませんでした）"
+          if [ -z "$(git status --porcelain news_data.js security_alerts.js)" ]; then
+            echo "変更なし（新しい注意喚起はありませんでした）"
             exit 0
           fi
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add news_data.js
-          git commit -m "警察庁の詐欺注意喚起を自動更新"
+          git add news_data.js security_alerts.js
+          git commit -m "警察庁の詐欺注意喚起・IPAの緊急情報を自動更新"
           git push

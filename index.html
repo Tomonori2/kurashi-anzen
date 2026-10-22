@@ -183,6 +183,22 @@
   }
   .homenote b { color: #143a66; }
 
+  /* ===== いま気をつけること（IPAの緊急情報） ===== */
+  .alerts { background: #fff; border: 2px solid #f0a500; border-radius: 14px; padding: 14px; margin-bottom: 14px; }
+  .alerts h2 { font-size: 17px; margin: 0 0 4px; color: #6b3d00; }
+  .alerts .sub { font-size: 12px; color: #7a879a; line-height: 1.6; }
+  .al-item { border-top: 1px dashed #dde4ee; padding: 10px 0 4px; margin-top: 10px; font-size: 14px; line-height: 1.7; overflow-wrap: anywhere; }
+  .al-badge { display: inline-block; font-size: 12px; font-weight: bold; border-radius: 6px; padding: 1px 8px; margin-right: 6px; }
+  .al-badge.you { background: #d0342c; color: #fff; }
+  .al-badge.some { background: #f0a500; color: #402c00; }
+  .al-badge.company { background: #e6ebf2; color: #445; }
+  .al-new { color: #d0342c; font-weight: bold; font-size: 12px; margin-left: 4px; }
+  .al-title { font-size: 12px; color: #7a879a; }
+  .al-item a { font-size: 12px; color: #1d5fa8; }
+  .alerts details { margin-top: 10px; font-size: 13px; }
+  .alerts summary { cursor: pointer; color: #445; }
+  .al-stale { color: #a8500c; font-weight: bold; }
+
   /* ===== 通話中の警告カード ===== */
   .alert-card {
     background: #ffd93d; color: #6b1410;
@@ -363,6 +379,11 @@
 <!-- ══════════ ホーム ══════════ -->
 <div class="screen active" id="screen-home">
   <div class="scroll"><div class="inner">
+    <div class="alerts" id="alertsBox" style="display:none;">
+      <h2>🚨 いま気をつけること</h2>
+      <div class="sub" id="alertsSub"></div>
+      <div id="alertsList"></div>
+    </div>
     <button class="bigbtn check" onclick="go('check')">
       <span class="t">🛡️ サイバーセキュリティ対策（弱点チェック）</span>
       <span class="d">パスワードの漏れ・スマホ・家のWi-Fi・パソコン・LINEの守り方を、ひとつずつ確かめます。14の質問で、あなたの弱いところと直し方も出します。設定なしで使えます。<span id="check-due-home"></span></span>
@@ -840,6 +861,7 @@
 
 <script src="knowledge.js" onerror="window.KNOWLEDGE = []"></script>
 <script src="news_data.js" onerror="window.SCAM_NEWS = []"></script>
+<script src="security_alerts.js" onerror="window.SECURITY_ALERTS = []"></script>
 <script src="curated_news.js" onerror="window.CURATED_NEWS = []"></script>
 <script src="curated_danger_numbers.js" onerror="window.CURATED_DANGER_NUMBERS = []"></script>
 <script src="ayashii_engine.js" onerror="window.Ayashii = null"></script>
@@ -1213,6 +1235,111 @@ function renderNewsList(elId, news, emptyText) {
     row.textContent = (n.date ? n.date + '　' : '') + n.title;
     box.appendChild(row);
   });
+}
+
+// ════════ いま気をつけること（IPAの緊急情報・毎朝自動取得）════════
+// 中身は fetch_ipa_alerts.py が作る security_alerts.js。「あなたも対象」かどうかの判定もそちらでしている。
+const ALERT_DAYS = 45;        // これより古いお知らせはホームに出さない
+const ALERT_STALE_DAYS = 4;   // 最終確認がこれより古ければ「自動更新が止まっているかも」と出す
+const ALERT_LABEL = { you: 'あなたも対象', some: '入れている人だけ', company: '会社・お店向け' };
+
+function daysSince(ymd) {
+  const t = Date.parse(String(ymd).replace(/\//g, '-') + 'T00:00:00+09:00');
+  return isNaN(t) ? 9999 : Math.floor((Date.now() - t) / 86400000);
+}
+
+function alertRow(a, showTodo) {
+  const row = document.createElement('div');
+  row.className = 'al-item';
+  const badge = document.createElement('span');
+  badge.className = 'al-badge ' + (ALERT_LABEL[a.who] ? a.who : 'company');
+  badge.textContent = ALERT_LABEL[a.who] || ALERT_LABEL.company;
+  row.appendChild(badge);
+  row.appendChild(document.createTextNode(a.date || ''));
+  if (daysSince(a.date) <= 7) {
+    const nw = document.createElement('span');
+    nw.className = 'al-new';
+    nw.textContent = 'NEW';
+    row.appendChild(nw);
+  }
+  if (showTodo) {
+    const todo = document.createElement('div');
+    todo.textContent = a.todo || '';
+    row.appendChild(todo);
+  }
+  const title = document.createElement('div');
+  title.className = 'al-title';
+  title.textContent = '元のお知らせ：' + (a.title || '');
+  row.appendChild(title);
+  // IPAのページ以外へは飛ばさない（データが壊れても、よそのサイトに誘導しないため）
+  if (/^https:\/\/www\.ipa\.go\.jp\//.test(a.url || '')) {
+    const link = document.createElement('a');
+    link.href = a.url;
+    link.target = '_blank';
+    link.rel = 'noopener';
+    link.textContent = 'くわしく（IPAのページ）';
+    row.appendChild(link);
+  }
+  return row;
+}
+
+function renderAlerts() {
+  const all = (typeof SECURITY_ALERTS !== 'undefined') ? SECURITY_ALERTS : [];
+  const updated = (typeof SECURITY_ALERTS_UPDATED !== 'undefined') ? SECURITY_ALERTS_UPDATED : '';
+  if (!all.length) return;   // 取れていないときはカードごと出さない
+  const recent = all.filter(function (a) { return daysSince(a.date) <= ALERT_DAYS; });
+
+  // 毎月のWindowsの更新のように、同じ「やること」が並ぶときは新しい1件だけ出す
+  const seen = {};
+  const uniq = function (a) {
+    if (seen[a.todo]) return false;
+    seen[a.todo] = true;
+    return true;
+  };
+  // ホームが長くならないよう、開いた状態で出すのは「あなたも対象」だけ。ほかはたたんでおく。
+  const mine = recent.filter(function (a) { return a.who === 'you'; }).filter(uniq);
+  const some = recent.filter(function (a) { return a.who === 'some'; }).filter(uniq);
+  const company = recent.filter(function (a) { return a.who !== 'you' && a.who !== 'some'; });
+
+  const sub = el('alertsSub');
+  sub.textContent = '国の機関（IPA）の緊急情報を、毎朝自動で確かめています。' +
+    (updated ? '最終確認 ' + updated + '。' : '');
+  if (updated && daysSince(updated) > ALERT_STALE_DAYS) {
+    const st = document.createElement('div');
+    st.className = 'al-stale';
+    st.textContent = '⚠️ ' + daysSince(updated) + '日間、確認できていません。自動更新が止まっているかもしれません。';
+    sub.appendChild(st);
+  }
+
+  const list = el('alertsList');
+  list.innerHTML = '';
+  if (mine.length) {
+    mine.forEach(function (a) { list.appendChild(alertRow(a, true)); });
+  } else {
+    const p = document.createElement('div');
+    p.className = 'al-item';
+    p.textContent = 'この' + ALERT_DAYS + '日のIPAの緊急情報で、スマホやパソコンを使う人が急いでやることはありません。ふだんどおり、更新が来たら入れてください。';
+    list.appendChild(p);
+  }
+  // 大きなニュース（会社向け）が出たばかりのときは、便乗詐欺の注意だけは開いた状態で出す
+  if (company.some(function (a) { return daysSince(a.date) <= 7; })) {
+    const warn = document.createElement('div');
+    warn.className = 'al-item';
+    warn.textContent = '⚠️ 最近、会社向けの大きなお知らせが出ました。あなたがやることはありませんが、それに便乗して「対策のためパスワードの再設定を」などと誘うメール・SMSが増えます。リンクは押さないでください。';
+    list.appendChild(warn);
+  }
+  function folded(label, items, showTodo) {
+    if (!items.length) return;
+    const det = document.createElement('details');
+    const sum = document.createElement('summary');
+    sum.textContent = label + ' ' + items.length + '件';
+    det.appendChild(sum);
+    items.forEach(function (a) { det.appendChild(alertRow(a, showTodo)); });
+    list.appendChild(det);
+  }
+  folded('そのソフトを入れている人だけ', some, true);
+  folded('会社・お店向け（あなたは何もしなくてOK）', company, false);
+  el('alertsBox').style.display = '';
 }
 
 // ════════ 録音を文字にする（Gemini）════════
@@ -2577,7 +2704,7 @@ function ayRecord() {
 }
 
 // スマホが古い版を掴んでいないか一目で分かるように、画面に版数を出しておく
-const APP_VERSION = 'v1.6.1（セキュリティ画面に目次）';
+const APP_VERSION = 'v1.7（いま気をつけること）';
 
 // ご意見フォーム（Googleフォーム）の共有リンク。空のあいだはボタンを出さない。
 // ※公開してよいリンクなので、ここに直接書いてかまわない（秘密の情報ではない）。
@@ -2647,6 +2774,7 @@ window.addEventListener('load', function () {
   el('auto-news-label').textContent = '🏢 警察庁より（自動取得' + (newsUpdated ? '・最終更新 ' + newsUpdated : '') + '）';
   renderNewsList('auto-news-list', (typeof SCAM_NEWS !== 'undefined') ? SCAM_NEWS : [], 'まだ取得された情報はありません');
   renderNewsList('curated-news-list', (typeof CURATED_NEWS !== 'undefined') ? CURATED_NEWS : [], 'まだ登録された情報はありません');
+  renderAlerts();
   updateHomeStatus();
 
   if (location.search.indexOf('shared=1') !== -1) {
