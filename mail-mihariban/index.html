@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<!-- CSP＝このページが通信してよい先の約束。自分のサイトの中のファイルを読むだけ。 -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>メール見張り番</title>
+<link rel="icon" href="../icon-192.png?v=2">
+<meta name="theme-color" content="#143a66">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+    background: #f2f5f9; color: #223; line-height: 1.8;
+  }
+  header { background: #143a66; color: #fff; padding: 14px 16px; }
+  header .in { max-width: 760px; margin: 0 auto; display: flex; align-items: center; gap: 10px; }
+  header img { width: 34px; height: 34px; border-radius: 8px; }
+  header h1 { font-size: 18px; }
+  header .sub { font-size: 12px; opacity: 0.85; }
+  header a { color: #fff; font-size: 13px; margin-left: auto; white-space: nowrap; }
+  main { max-width: 760px; margin: 0 auto; padding: 18px 16px 48px; }
+  .card { background: #fff; border-radius: 14px; padding: 18px; margin-bottom: 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
+  h2 { font-size: 18px; color: #143a66; margin-bottom: 10px; }
+  h3 { font-size: 16px; margin: 14px 0 6px; }
+  p + p { margin-top: 8px; }
+  ol, ul { padding-left: 1.4em; }
+  li { margin: 4px 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 8px 0; }
+  th, td { border-bottom: 1px solid #e3e9f1; padding: 8px 6px; text-align: left; vertical-align: top; }
+  th { background: #f4f7fb; font-weight: bold; }
+  code { background: #eef2f7; border-radius: 6px; padding: 1px 6px; font-size: 0.92em; word-break: break-all; }
+  .lead { font-size: 16px; }
+  .ok   { border-left: 5px solid #2e8b57; }
+  .warn { border-left: 5px solid #d0342c; background: #fdf3f2; }
+  .warn h2 { color: #8c1c17; }
+  .note { font-size: 13px; color: #6a7a90; margin-top: 8px; }
+  .step { display: inline-block; background: #143a66; color: #fff; border-radius: 8px; padding: 0 9px; margin-right: 6px; font-size: 14px; }
+  .copyrow { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px dashed #dde4ee; }
+  .copyrow:last-child { border-bottom: none; }
+  .copyrow .name { flex: 1; min-width: 200px; }
+  .copyrow .name b { font-family: Consolas, monospace; }
+  button.copy {
+    background: #0f7c8c; color: #fff; border: none; border-radius: 10px;
+    padding: 10px 16px; font-size: 15px; font-family: inherit; cursor: pointer; min-width: 150px;
+  }
+  button.copy.done { background: #2e8b57; }
+  button.copy.ng { background: #d0342c; }
+  .pc { display: inline-block; background: #fff6e5; color: #7a5218; border: 1px solid #e0a800; border-radius: 8px; padding: 2px 10px; font-size: 13px; }
+  @media (max-width: 480px) { th:first-child, td:first-child { width: 40%; } }
+</style>
+</head>
+<body>
+<header><div class="in">
+  <img src="../icon-192.png?v=2" alt="">
+  <div><h1>📮 メール見張り番</h1><div class="sub">くらしの安全相談AI の仲間</div></div>
+  <a href="../">← アプリへ戻る</a>
+</div></header>
+
+<main>
+  <div class="card ok">
+    <p class="lead">あなたのGmailを<b>1時間ごとに見回って</b>、詐欺っぽいメールが届いたら知らせてくれる仕組みです。</p>
+    <table>
+      <tr><th>いつ</th><th>何が届くか</th></tr>
+      <tr><td>危険なメールが来たとき<br>（1時間以内）</td><td>「【メール見張り番】危険なメールが届いています」<br>あやしい理由と、どうすればいいかが書いてあります</td></tr>
+      <tr><td>毎朝7時ごろ</td><td>「けさのまとめ」＝見たメールの数・危険・注意の一覧。<br><b>届くこと自体が「ちゃんと動いている」証明</b>です</td></tr>
+    </table>
+    <ul>
+      <li><b>無料</b>です。AIは使いません。</li>
+      <li>判定は<b>あなたのGoogleアカウントの中だけ</b>で行います。メールの中身は、作者にもほかの誰にも届きません。</li>
+      <li>メールを消す・動かす・返信する・転送する、は<b>一切しません。読むだけです。</b></li>
+      <li>見分け方は、アプリの「🔍 これ、あやしい？」と同じです。それに、送り主のなりすまし確認を足しています。</li>
+    </ul>
+    <p class="note"><span class="pc">💻 パソコンが必要です</span>　最初の設定（15〜20分）だけ。そのあとは何もしなくても動き続けます。</p>
+  </div>
+
+  <div class="card warn">
+    <h2>⚠️ はじめる前に、必ず読んでください</h2>
+    <p>これは「<b>あなたのメールを読む許可</b>」をプログラムに与える仕組みです。だから、次のことを守ってください。</p>
+    <ul>
+      <li>コードは<b>このページ（<code>tomonori2.github.io/kurashi-anzen/</code>）から</b>だけコピーしてください。メール・SNS・LINEで送られてきたコードは使わないでください。</li>
+      <li><b>知らない人から「このコードを貼って」「この許可を押して」と言われたら、それ自体が詐欺です。</b>同じ手口でメールを乗っ取る犯罪があります。</li>
+      <li>許可の画面に「<b>メールの完全な削除</b>」「<b>Googleドライブのすべてのファイル</b>」「<b>連絡先</b>」が出たら、<b>中止してください</b>。この仕組みは求めていません。</li>
+      <li><b>会社や仕事のメール</b>には使わないでください。自分の個人のGmailだけにしてください。</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2><span class="step">1</span>新しいプロジェクトを作る</h2>
+    <ol>
+      <li>パソコンのブラウザ（Chromeなど）で <code>https://script.google.com</code> を開きます（いつものGoogleアカウントで）</li>
+      <li>左上の「<b>＋ 新しいプロジェクト</b>」を押します</li>
+      <li>上の「無題のプロジェクト」を押して、名前を「<b>メール見張り番</b>」に変えます</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <h2><span class="step">2</span>設定ファイルを見えるようにする</h2>
+    <ol>
+      <li>画面のいちばん左の細い列にある<b>歯車マーク ⚙</b>（プロジェクトの設定）を押します</li>
+      <li>「<b>「appsscript.json」マニフェスト ファイルをエディタで表示する</b>」にチェックを入れます</li>
+      <li>左の列の <b>＜＞</b>（エディタ）を押して戻ります。<code>appsscript.json</code> と <code>コード.gs</code> が並んでいればOKです</li>
+    </ol>
+    <p class="note">このチェックを忘れると、Googleが必要以上に広い許可を求めてきます。</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="step">3</span>3つのファイルを貼る</h2>
+    <p>どれも同じやり方です：<b>下のボタンでコピー → エディタで左のファイル名を押す → 右の中身をクリック → <code>Ctrl + A</code>（全部選ぶ）→ <code>Ctrl + V</code>（貼る）</b></p>
+    <div class="copyrow">
+      <div class="name">① <b>appsscript.json</b><br><span class="note">許可を「読むだけ」にしぼる設定</span></div>
+      <button class="copy" data-file="appsscript.json">📋 ①をコピー</button>
+    </div>
+    <div class="copyrow">
+      <div class="name">② <b>コード.gs</b><br><span class="note">見回り・お知らせ・朝のまとめの本体</span></div>
+      <button class="copy" data-file="Code.gs">📋 ②をコピー</button>
+    </div>
+    <div class="copyrow">
+      <div class="name">③ <b>Engine.gs</b>（新しく作る）<br><span class="note">左の「ファイル」の横の <b>＋</b> →「スクリプト」→ 名前に <code>Engine</code> と入れて Enter。それから貼ります</span></div>
+      <button class="copy" data-file="engine">📋 ③をコピー</button>
+    </div>
+    <p class="note">3つ貼ったら <code>Ctrl + S</code> で保存します。中身はすべて、貼ったあとエディタで読めます。隠れた部分はありません。</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="step">4</span>まず「試し」で判定だけ見る</h2>
+    <ol>
+      <li>左の <code>コード.gs</code> を押してから、上の「▷ 実行」の右にある関数のボックスで <b>tryRecent</b> を選びます</li>
+      <li><b>▷ 実行</b> を押します。許可の画面が出たら、次の5へ</li>
+      <li>画面の下の「<b>実行ログ</b>」に、最近20通の判定（なし／【注意】／【危険】）が並びます</li>
+    </ol>
+    <p class="note">ここではメールは送られません。いつものお店や銀行の本物のメールが【危険】になっていないか、見てください。</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="step">5</span>許可の画面（いちばんの山場）</h2>
+    <ol>
+      <li>「承認が必要です」→「<b>権限を確認</b>」</li>
+      <li>自分のアカウントを選び、「次へ」</li>
+      <li>「このアプリは Google で確認されていません」と出たら、<b>左下の小さな「詳細」</b>→「<b>メール見張り番（安全ではないページ）に移動</b>」<br>
+        <span class="note">個人が作ったプログラムで、Googleの審査を受けていないために出る注意です。作ったのは今のあなた自身です。</span></li>
+      <li>許可する内容を確かめて「<b>すべて選択</b>」→「<b>続行</b>」</li>
+    </ol>
+    <table>
+      <tr><th>出てくる文言</th><th>何に使うか</th></tr>
+      <tr><td>メール メッセージと設定の<b>表示</b></td><td>受信箱を読んで判定する（<b>読むだけ</b>）</td></tr>
+      <tr><td>ユーザー本人に代わってのメールの送信</td><td>自分あてのお知らせを送る</td></tr>
+      <tr><td>自分がいないときにこのアプリケーションを実行</td><td>1時間ごと・毎朝の見回り</td></tr>
+    </table>
+    <p class="note">この3つ（と、メールアドレスの確認）だけです。「削除」「ドライブ」「連絡先」があったら中止してください。</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="step">6</span>見張りを始める</h2>
+    <ol>
+      <li>関数のボックスを <b>setup</b> に変えて、<b>▷ 実行</b></li>
+      <li>Gmailに「<b>【メール見張り番】見張りを始めました</b>」が届けば完成です</li>
+      <li>次の朝7時ごろ「<b>けさのまとめ</b>」が届くかを確かめてください</li>
+    </ol>
+    <p class="note">始めたときに、この24時間に届いたメールも1回見ます。危険なものがあれば、すぐにお知らせが届きます。</p>
+  </div>
+
+  <div class="card">
+    <h2>知っておいてほしいこと</h2>
+    <ul>
+      <li><b>完ぺきではありません。</b>詐欺の特徴で見分けているので、新しい手口は見のがすことがあります。「お知らせが来ない＝安全」とは思わないでください。</li>
+      <li>お店のセールのメールが「注意」に入ることがあります。「注意」は朝のまとめに入るだけで、すぐのお知らせは来ません。</li>
+      <li>お知らせの中のあやしいリンクは <code>hxxps://example[.]top</code> のように、<b>押せない形に崩して</b>あります。</li>
+      <li>Gmailがすでに迷惑メールに入れたものは見ません。すり抜けてきたものを拾う「二重のチェック役」です。</li>
+      <li>SMS・LINE・電話は見られません。それはアプリの「🔍 これ、あやしい？」に貼って調べてください。</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>困ったとき・やめたいとき</h2>
+    <table>
+      <tr><th>こんなとき</th><th>どうする</th></tr>
+      <tr><td>朝のまとめが届かない</td><td>迷惑メールフォルダを確認 → なければ <b>setup</b> をもう一度実行</td></tr>
+      <tr><td>「必要な権限がありません」と出る</td><td>手順2のチェックと、①の貼り付けを確かめてください。<b>自分で広い許可に書きかえないでください</b></td></tr>
+      <tr><td>本物のメールが「危険」と出た</td><td>いつもの公式アプリや公式サイトから確かめてください。アプリの「ご意見を送る」で、送り主のアドレスと件名を教えてもらえると判定を直せます（本文は送らないでください）</td></tr>
+      <tr><td>やめたい</td><td>script.google.com で「メール見張り番」を開き、左の<b>時計マーク（トリガー）</b>で2つとも削除。プロジェクトごと消してもかまいません</td></tr>
+    </table>
+  </div>
+
+  <p class="note" style="text-align:center;">⚠️ 今まさに危険なとき・被害が起きているときは、迷わず110番へ。迷ったら 警察相談 #9110 ／ 消費者ホットライン 188</p>
+</main>
+
+<script>
+// ③ Engine.gs は、アプリの「これ、あやしい？」と同じ判定部品（../ayashii_engine.js）に説明を付けたもの。
+//    同じ中身を2か所に置かないため、ここで組み立てる。
+var ENGINE_HEAD = [
+  '// =====================================================================',
+  '//  このファイルは「くらしの安全相談AI」の判定部品（ayashii_engine.js）をそのまま写したものです。',
+  '//  https://tomonori2.github.io/kurashi-anzen/ayashii_engine.js',
+  '// =====================================================================',
+  ''
+].join('\n');
+
+function 中身をとる(file){
+  var url = file === 'engine' ? '../ayashii_engine.js' : file;
+  return fetch(url, {cache: 'no-cache'}).then(function(r){
+    if(!r.ok) throw new Error(r.status);
+    return r.text();
+  }).then(function(t){ return file === 'engine' ? ENGINE_HEAD + t : t; });
+}
+
+// 押してから読みに行くと、ブラウザが「人が押した直後」と見なさなくなりコピーを断ることがある。
+// だからページを開いた時点で3つとも読んでおき、押した瞬間にコピーする。
+var 読んだ中身 = {};
+['appsscript.json','Code.gs','engine'].forEach(function(f){
+  中身をとる(f).then(function(t){ 読んだ中身[f] = t; }).catch(function(){});
+});
+
+// 予備：昔ながらのコピー（見えない入力欄に入れて選んでコピー）
+function 予備のコピー(t){
+  var ta = document.createElement('textarea');
+  ta.value = t; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.top = '-1000px';
+  document.body.appendChild(ta); ta.select();
+  var ok = false;
+  try { ok = document.execCommand('copy'); } catch(e) {}
+  document.body.removeChild(ta);
+  return ok;
+}
+
+document.querySelectorAll('button.copy').forEach(function(b){
+  var もと = b.textContent;
+  function 結果(ok){
+    b.textContent = ok ? '✓ コピーしました' : 'コピーできませんでした。もう一度';
+    b.className = ok ? 'copy done' : 'copy ng';
+    setTimeout(function(){ b.textContent = もと; b.className = 'copy'; }, 4000);
+  }
+  b.addEventListener('click', function(){
+    var t = 読んだ中身[b.dataset.file];
+    if(!t){ 結果(false); 中身をとる(b.dataset.file).then(function(x){ 読んだ中身[b.dataset.file] = x; }); return; }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(t).then(function(){ 結果(true); }, function(){ 結果(予備のコピー(t)); });
+    } else {
+      結果(予備のコピー(t));
+    }
+  });
+});
+</script>
+</body>
+</html>

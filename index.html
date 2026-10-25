@@ -398,7 +398,7 @@
     </button>
     <button class="bigbtn ayashii" onclick="go('ayashii')">
       <span class="t">🔍 これ、あやしい？</span>
-      <span class="d">届いたSMS・メール、かかってきた番号、リンクを貼るだけ。その場で見分けて理由と対処を出します。設定なし・入力はどこにも送りません。</span>
+      <span class="d">届いたSMS・メール、かかってきた番号、リンクを貼るだけ。その場で見分けて理由と対処を出します。設定なし・入力はどこにも送りません。Gmailを自動で見張る「メール見張り番」もここから。</span>
     </button>
     <button class="bigbtn help" onclick="go('help')">
       <span class="t">🚑 だまされたかも・やってしまった</span>
@@ -484,6 +484,14 @@
       </div>
     </div>
     <div id="ay-result"></div>
+    <div class="card">
+      <div class="label">📮 Gmailを自動で見張る（メール見張り番）</div>
+      <div class="hint">
+        ここに貼らなくても、届いたメールを<b>1時間ごとに自動で見回って</b>、詐欺っぽいメールが来たら知らせてくれる仕組みです。毎朝「まとめ」も届きます。<br>
+        見分け方はこの画面と同じ。<b>無料・AIなし・読むだけ</b>（消したり返信したりはしません）。最初の設定だけパソコンで15〜20分かかります。
+      </div>
+      <a class="callbtn b3" href="mail-mihariban/" target="_blank" rel="noopener">📮 設定のしかたを見る（パソコン向け）</a>
+    </div>
   </div></div>
 </div>
 
@@ -2709,7 +2717,7 @@ function ayRecord() {
 }
 
 // スマホが古い版を掴んでいないか一目で分かるように、画面に版数を出しておく
-const APP_VERSION = 'v1.7.1（守りを強化）';
+const APP_VERSION = 'v1.8（メール見張り番）';
 
 // ご意見フォーム（Googleフォーム）の共有リンク。空のあいだはボタンを出さない。
 // ※公開してよいリンクなので、ここに直接書いてかまわない（秘密の情報ではない）。
