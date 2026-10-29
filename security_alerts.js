@@ -1,5 +1,5 @@
 // IPAの緊急対策情報・注意喚起から自動取得（fetch_ipa_alerts.py）。手動で書き換えないこと。
-const SECURITY_ALERTS_UPDATED = "2026/10/28";
+const SECURITY_ALERTS_UPDATED = "2026/10/29";
 const SECURITY_ALERTS = [
   {
     "date": "2026/10/27",
