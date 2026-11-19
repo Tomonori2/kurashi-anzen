@@ -1,6 +1,13 @@
 // IPAの緊急対策情報・注意喚起から自動取得（fetch_ipa_alerts.py）。手動で書き換えないこと。
-const SECURITY_ALERTS_UPDATED = "2026/11/18";
+const SECURITY_ALERTS_UPDATED = "2026/11/19";
 const SECURITY_ALERTS = [
+  {
+    "date": "2026/11/18",
+    "title": "Oracle Java の脆弱性対策について(2026年11月)",
+    "url": "https://www.ipa.go.jp/security/security-alert/2026/1118-jre.html",
+    "who": "some",
+    "todo": "パソコンに Java を入れている人だけ、更新してください。心当たりがなければ、たいてい何もしなくてOKです。"
+  },
   {
     "date": "2026/11/11",
     "title": "Microsoft 製品の脆弱性対策について(2026年11月)",
@@ -61,13 +68,6 @@ const SECURITY_ALERTS = [
     "date": "2026/10/07",
     "title": "「Movable Type」における複数の脆弱性について（JVN#91153973）",
     "url": "https://www.ipa.go.jp/security/security-alert/2026/20261007-jvn.html",
-    "who": "company",
-    "todo": "会社やお店のシステム向けのお知らせです。あなたがやることはありません。ただ、このニュースに便乗して「対策のためパスワードの再設定を」などと誘うメールやSMSが増えます。リンクは押さないでください。"
-  },
-  {
-    "date": "2026/09/28",
-    "title": "NetScaler ADCおよびNetScaler Gatewayの脆弱性について(CVE-2026-88771、CVE-2026-88772等)",
-    "url": "https://www.ipa.go.jp/security/security-alert/2026/alert20260928.html",
     "who": "company",
     "todo": "会社やお店のシステム向けのお知らせです。あなたがやることはありません。ただ、このニュースに便乗して「対策のためパスワードの再設定を」などと誘うメールやSMSが増えます。リンクは押さないでください。"
   }
