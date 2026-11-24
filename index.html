@@ -68,6 +68,10 @@
   }
 
   /* ===== 画面の切り替え ===== */
+  /* 文字の大きさ（右上の「文字」ボタン）：画面の中身をまとめて拡大する。文章は画面幅で折り返す */
+  body.fs1 .screen > *, body.fs1 .modalBox { zoom: 1.15; }
+  body.fs2 .screen > *, body.fs2 .modalBox { zoom: 1.3; }
+  #fontBtn { font-size: 14px; font-weight: bold; padding-left: 8px; padding-right: 8px; white-space: nowrap; width: auto; min-width: 44px; }
   .screen { display: none; flex: 1; min-height: 0; flex-direction: column; }
   .screen.active { display: flex; }
   .scroll { flex: 1; overflow-y: auto; padding: 16px 14px 28px; }
@@ -394,6 +398,7 @@
     <div class="sub" id="headSub">詐欺・防犯・暮らしの困りごとに</div>
   </div>
   <button id="homeBtn" title="ホームに戻る" style="display:none;">🏠</button>
+  <button id="fontBtn" title="文字の大きさを変える" aria-label="文字の大きさを変える">文字</button>
   <button id="settingsBtn" title="設定">⚙️</button>
 </header>
 
@@ -2739,7 +2744,24 @@ function ayRecord() {
 }
 
 // スマホが古い版を掴んでいないか一目で分かるように、画面に版数を出しておく
-const APP_VERSION = 'v1.9（回数カウンター）';
+const APP_VERSION = 'v1.10（文字の大きさ）';
+
+// ════════ 文字の大きさ（ふつう → 大 → 特大）。選んだ大きさはこのスマホに覚えておく ════════
+const FONT_STORAGE = 'kurashi_font';
+const FONT_NAMES = ['文字', '文字大', '特大'];
+function applyFont(n) {
+  document.body.classList.remove('fs1', 'fs2');
+  if (n > 0) document.body.classList.add('fs' + n);
+  el('fontBtn').textContent = FONT_NAMES[n];
+}
+let fontLevel = parseInt(localStorage.getItem(FONT_STORAGE) || '0', 10);
+if (!(fontLevel >= 0 && fontLevel <= 2)) fontLevel = 0;
+applyFont(fontLevel);
+el('fontBtn').addEventListener('click', function () {
+  fontLevel = (fontLevel + 1) % 3;
+  try { localStorage.setItem(FONT_STORAGE, String(fontLevel)); } catch (e) {}
+  applyFont(fontLevel);
+});
 
 // ════════ 開かれた回数を数える（作者のGoogleスプレッドシートに1行足すだけ）════════
 // 送るのは「アプリ名・版・どこから来たか・開き方・はじめてか」だけ。同じスマホからは1日1回。
