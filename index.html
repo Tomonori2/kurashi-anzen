@@ -5,7 +5,7 @@
 <!-- CSP＝このアプリが通信してよい先・動かしてよいプログラムをブラウザに約束させる設定。
      万一画面に悪い命令が入っても、APIキーや文字起こしをよそへ送れないようにする。
      通信先を増やすときは connect-src に足すこと（足さないとその通信だけ止まる）。 -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' data: blob:; connect-src 'self' https://generativelanguage.googleapis.com https://versionhistory.googleapis.com https://api.pwnedpasswords.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' data: blob:; connect-src 'self' https://generativelanguage.googleapis.com https://versionhistory.googleapis.com https://api.pwnedpasswords.com https://script.google.com https://script.googleusercontent.com; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>くらしの安全相談AI｜詐欺の電話・あやしいメールやSMSを無料でチェック</title>
 <meta name="description" content="詐欺の電話・あやしいメールやSMS・URLを、その場で見分ける無料の防犯アプリ。オレオレ詐欺・還付金詐欺・フィッシングの見分け方、カードや銀行の利用通知、パスワード漏れ調べ、スマホとWi-Fiの点検までまとめて。登録なし。">
@@ -440,6 +440,11 @@
       <b>📝 ご意見をお聞かせください</b><br>
       「こんな相談にも答えてほしい」「ここが分かりにくい」など、ひとことで大丈夫です。お名前やメールアドレスは不要です。
       <a class="callbtn b3" id="feedbackLink" target="_blank" rel="noopener">ご意見を送る（1分）</a>
+    </div>
+
+    <div class="hint" style="margin-top:14px;">
+      使われ方を知るために、開かれた回数だけ数えています（アプリ名・版・どこから来たか・はじめてか。同じスマホは1日1回）。相談の内容・電話番号・キーは送りません。<br>
+      <label><input type="checkbox" id="countOff"> 回数を数えるのを止める</label>
     </div>
   </div></div>
 </div>
@@ -2734,7 +2739,37 @@ function ayRecord() {
 }
 
 // スマホが古い版を掴んでいないか一目で分かるように、画面に版数を出しておく
-const APP_VERSION = 'v1.8（メール見張り番）';
+const APP_VERSION = 'v1.9（回数カウンター）';
+
+// ════════ 開かれた回数を数える（作者のGoogleスプレッドシートに1行足すだけ）════════
+// 送るのは「アプリ名・版・どこから来たか・開き方・はじめてか」だけ。同じスマホからは1日1回。
+// 公開ページ（tomonori2.github.io）のときだけ動く。ホーム画面の下のチェックで止められる。
+// ※このURLは秘密ではない（公開してよい）。いたずらで増やされうるので、数字は目安。
+const COUNT_URL = 'https://script.google.com/macros/s/AKfycbxUtIrmhEC6aWCJmfzDkGBHghIoQtiGZD9vQQrsiU2hhAilfc-jATezlTBru3iOsHaOWg/exec';
+const COUNT_STORAGE = 'kurashi_count';
+function loadCount() { try { return JSON.parse(localStorage.getItem(COUNT_STORAGE) || '{}') || {}; } catch (e) { return {}; } }
+function saveCount(st) { try { localStorage.setItem(COUNT_STORAGE, JSON.stringify(st)); } catch (e) {} }
+function countOpen() {
+  try {
+    const st = loadCount();
+    const q = (new URLSearchParams(location.search).get('from') || '').replace(/[^A-Za-z0-9_.\-]/g, '').slice(0, 40);
+    if (q && !st.from) st.from = q;   // 最初に来た場所を覚えておく（あとの日もその目印で数える）
+    const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' });
+    if (location.hostname === 'tomonori2.github.io' && !st.off && st.last !== today) {
+      const used = Object.keys(localStorage).some(function (k) { return k.indexOf('kurashi_') === 0 && k !== COUNT_STORAGE; });
+      const isNew = (!st.first && !used) ? 1 : 0;
+      st.last = today; if (!st.first) st.first = today;
+      const home = matchMedia('(display-mode: standalone)').matches;
+      fetch(COUNT_URL + '?app=kurashi-anzen&ver=' + encodeURIComponent(APP_VERSION.split('（')[0])
+        + '&from=' + encodeURIComponent(st.from || '') + '&mode=' + (home ? 'home' : 'browser') + '&new=' + isNew,
+        { mode: 'no-cors', keepalive: true }).catch(function () {});
+    }
+    saveCount(st);
+  } catch (e) {}
+}
+el('countOff').checked = !!loadCount().off;
+el('countOff').onchange = function () { const st = loadCount(); st.off = el('countOff').checked; saveCount(st); };
+countOpen();
 
 // ご意見フォーム（Googleフォーム）の共有リンク。空のあいだはボタンを出さない。
 // ※公開してよいリンクなので、ここに直接書いてかまわない（秘密の情報ではない）。
